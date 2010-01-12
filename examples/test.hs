@@ -14,14 +14,13 @@ graphicalFps = 30
 
 data Tile = Tile { 
     tileSolid :: Bool,
-    tileBelow :: Surface,
-    tileAbove :: Surface
+    tileSurface :: Surface
     }
 
 tileWidth = 32
 tileHeight = 32
 
-ascii = concat $ transpose [
+ascii = [
     "************************************************************",
     "*   *       *         *                                    *",
     "*   *  ***  * *** *   *                                    *",
@@ -65,15 +64,14 @@ main = do
         windowDefaultHeight := 600,
         containerBorderWidth := 0]
 
-    withImageSurfaceFromPNG "tiles/none.png" $ \noSurface -> withImageSurfaceFromPNG "tiles/man1.png" $ \manSurface ->
+    withImageSurfaceFromPNG "tiles/man1.png" $ \manSurface ->
      withImageSurfaceFromPNG "tiles/organic.png" $ \organicSurface ->
-      withImageSurfaceFromPNG "tiles/wall.png" $ \boxBelowSurface -> 
-       withImageSurfaceFromPNG "tiles/walltop.png" $ \boxAboveSurface -> do
-        let tile '*' = Tile { tileSolid = True, tileBelow = boxBelowSurface, tileAbove = boxAboveSurface }
-            tile ' ' = Tile { tileSolid = False, tileBelow = organicSurface, tileAbove = noSurface }
+      withImageSurfaceFromPNG "tiles/box.png" $ \boxSurface -> do
+        let tile '*' = Tile { tileSolid = True, tileSurface = boxSurface }
+            tile ' ' = Tile { tileSolid = False, tileSurface = organicSurface }
         
         let tileMap :: DiffArray (Int, Int) Tile
-            tileMap = listArray ((0, 0), (59, 29)) (map tile ascii)
+            tileMap = listArray ((0, 0), (length (head ascii) - 1, length ascii - 1)) (map tile $ concat $ transpose ascii)
 
         canvas <- drawingAreaNew
         containerAdd window canvas
@@ -106,13 +104,10 @@ main = do
             drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
             renderWithDrawable drawable $ do
                 scale 2 2
-                drawTiles (w `div` 2) (h `div` 2) 10 10 (surfaceBelow tileMap)
+                drawTiles (w `div` 2) (h `div` 2) 10 10 (tileSurface . (tileMap !))
                 drawCharacters (w `div` 2) (h `div` 2) 10 10 manSurface
-                drawTiles (w `div` 2) (h `div` 2) 10 10 (surfaceAbove tileMap)
             drawWindowEndPaint drawable
             return True
-        surfaceBelow tileMap (x, y) = tileBelow (tileMap ! (x, y))
-        surfaceAbove tileMap (x, y) = tileAbove (tileMap ! (x, y + 1))
 
 drawCharacters :: Int -> Int -> Int -> Int -> Surface -> Render ()
 drawCharacters w h x y surface = do
