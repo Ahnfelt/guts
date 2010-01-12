@@ -7,14 +7,51 @@ import Control.Concurrent
 import Control.Monad (when)
 import Control.Monad.Trans
 import Data.Array.Diff
+import Data.List (transpose)
 
-data Tile = Solid | Nonsolid deriving Enum
+graphicalFps = 30
 
-tileMap :: DiffArray (Int, Int) Tile
-tileMap = listArray ((0, 0), (99, 99)) (concat $ repeat [Solid, Nonsolid, Solid])
+data Tile = Tile { 
+    tileSolid :: Bool,
+    tileBelow :: Surface,
+    tileAbove :: Surface
+    }
 
 tileWidth = 32
 tileHeight = 32
+
+ascii = concat $ transpose [
+    "************************************************************",
+    "*   *       *         *                                    *",
+    "*   *  ***  * *** *   *                                    *",
+    "*      *    *   * *   *                                    *",
+    "********    *** * *** *                                    *",
+    "*           *       *                                      *",
+    "*           *       *                                      *",
+    "* *******************                                      *",
+    "*        *                                                 *",
+    "*        *                                                 *",
+    "*****    *                                                 *",
+    "*   *    *                                                 *",
+    "*   ******                                                 *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "************************************************************"
+    ]
 
 main :: IO ()
 main = do
@@ -27,7 +64,15 @@ main = do
         windowDefaultHeight := 600,
         containerBorderWidth := 0]
 
-    withImageSurfaceFromPNG "blah.png" $ \surface -> do
+    withImageSurfaceFromPNG "tiles/none.png" $ \noSurface ->
+     withImageSurfaceFromPNG "tiles/organic.png" $ \organicSurface ->
+      withImageSurfaceFromPNG "tiles/wall.png" $ \boxBelowSurface -> do
+       withImageSurfaceFromPNG "tiles/walltop.png" $ \boxAboveSurface -> do
+        let tile '*' = Tile { tileSolid = True, tileBelow = boxBelowSurface, tileAbove = boxAboveSurface }
+            tile ' ' = Tile { tileSolid = False, tileBelow = organicSurface, tileAbove = noSurface }
+        
+        let tileMap :: DiffArray (Int, Int) Tile
+            tileMap = listArray ((0, 0), (59, 29)) (map tile ascii)
 
         canvas <- drawingAreaNew
         containerAdd window canvas
@@ -37,39 +82,42 @@ main = do
         onKeyPress window $ \Key { eventKeyName = key } ->
             when (key == "Escape") mainQuit >> return True
 
-        color <- newIORef (1, 0, 0)
-        timeoutAdd (updateGraphics canvas color surface) 100
+        timeoutAdd (updateGraphics canvas tileMap) (1000 `div` graphicalFps)
         onDestroy window mainQuit
         mainGUI
     
     where
-        updateGraphics canvas color surface = do
-            (r, g, b) <- readIORef color
+        updateGraphics canvas tileMap = do
             (w, h) <- widgetGetSize canvas
             drawable <- widgetGetDrawWindow canvas
             drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
-            --renderWithDrawable drawable (myDraw (fromIntegral w) (fromIntegral h) (r, g, b) surface)
-            renderWithDrawable drawable (drawTiles (w `div` 2) (h `div` 2) 10 10 tileMap surface)
+            renderWithDrawable drawable $ do
+                scale 2 2
+                drawTiles (w `div` 2) (h `div` 2) 10 10 (surfaceBelow tileMap)
+                drawCharacters (w `div` 2) (h `div` 2) 10 10 ()
+                drawTiles (w `div` 2) (h `div` 2) 10 10 (surfaceAbove tileMap)
             drawWindowEndPaint drawable
-            writeIORef color (b, r, g)
             return True
+        surfaceBelow tileMap (x, y) = tileBelow (tileMap ! (x, y))
+        surfaceAbove tileMap (x, y) = tileAbove (tileMap ! (x, y + 1))
 
-drawTiles :: Int -> Int -> Int -> Int -> DiffArray (Int, Int) Tile -> Surface -> Render ()
-drawTiles w h x y tileMap surface = do
+drawCharacters :: Int -> Int -> Int -> Int -> Surface -> Render ()
+drawTiles w h x y surface = do
+    setSourceSurface s 100 100
+    paint
+
+drawTiles :: Int -> Int -> Int -> Int -> ((Int, Int) -> Surface) -> Render ()
+drawTiles w h x y surface = do
     let (oX, oY) = (x `mod` tileWidth, y `mod` tileHeight)
     let (nwX, nwY) = (x `div` tileWidth, y `div` tileHeight)
     let (seX, seY) = ((x + w) `div` tileWidth, (y + h) `div` tileHeight)
     let coordinates = range ((nwX, nwY), (seX, seY))
-    scale 2 2
     mapM_ (draw oX oY) coordinates
     where
         draw oX oY (tX, tY) = do
-            case tileMap ! (tX, tY) of
-                Solid -> do
-                    let x = fromIntegral (tX * tileWidth - oX)
-                    let y = fromIntegral (tY * tileHeight - oY)
-                    setSourceSurface surface x y
-                    paint
-                Nonsolid -> do
-                    return ()
+            let s = surface (tX, tY)
+            let x = fromIntegral (tX * tileWidth - oX)
+            let y = fromIntegral (tY * tileHeight - oY)
+            setSourceSurface s x y
+            paint
 
