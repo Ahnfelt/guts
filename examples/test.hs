@@ -1,4 +1,4 @@
-import Data.IORef
+import Control.Concurrent.MVar
 import System.IO.Unsafe
 import Graphics.UI.Gtk hiding (fill, Solid)
 import Graphics.UI.Gtk.Gdk.Events
@@ -8,6 +8,7 @@ import Control.Monad (when)
 import Control.Monad.Trans
 import Data.Array.Diff
 import Data.List (transpose)
+import qualified Data.Set as Set
 
 graphicalFps = 30
 
@@ -64,9 +65,9 @@ main = do
         windowDefaultHeight := 600,
         containerBorderWidth := 0]
 
-    withImageSurfaceFromPNG "tiles/none.png" $ \noSurface ->
+    withImageSurfaceFromPNG "tiles/none.png" $ \noSurface -> withImageSurfaceFromPNG "tiles/man1.png" $ \manSurface ->
      withImageSurfaceFromPNG "tiles/organic.png" $ \organicSurface ->
-      withImageSurfaceFromPNG "tiles/wall.png" $ \boxBelowSurface -> do
+      withImageSurfaceFromPNG "tiles/wall.png" $ \boxBelowSurface -> 
        withImageSurfaceFromPNG "tiles/walltop.png" $ \boxAboveSurface -> do
         let tile '*' = Tile { tileSolid = True, tileBelow = boxBelowSurface, tileAbove = boxAboveSurface }
             tile ' ' = Tile { tileSolid = False, tileBelow = organicSurface, tileAbove = noSurface }
@@ -79,22 +80,34 @@ main = do
 
         widgetShowAll window 
 
-        onKeyPress window $ \Key { eventKeyName = key } ->
-            when (key == "Escape") mainQuit >> return True
+        keyState <- newMVar (Set.empty)
 
-        timeoutAdd (updateGraphics canvas tileMap) (1000 `div` graphicalFps)
+        onKeyPress window $ \Key { eventKeyName = key } -> case key of
+            "Escape" -> do 
+                mainQuit
+                return True
+            k -> do 
+                modifyMVar_ keyState $ \s -> return $ Set.insert k s
+                return True
+
+        onKeyRelease window $ \Key { eventKeyName = key } -> case key of
+            k -> do 
+                modifyMVar_ keyState $ \s -> return $ Set.delete k s
+                return True
+
+        timeoutAdd (updateGraphics canvas tileMap manSurface) (1000 `div` graphicalFps)
         onDestroy window mainQuit
         mainGUI
     
     where
-        updateGraphics canvas tileMap = do
+        updateGraphics canvas tileMap manSurface = do
             (w, h) <- widgetGetSize canvas
             drawable <- widgetGetDrawWindow canvas
             drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
             renderWithDrawable drawable $ do
                 scale 2 2
                 drawTiles (w `div` 2) (h `div` 2) 10 10 (surfaceBelow tileMap)
-                drawCharacters (w `div` 2) (h `div` 2) 10 10 ()
+                drawCharacters (w `div` 2) (h `div` 2) 10 10 manSurface
                 drawTiles (w `div` 2) (h `div` 2) 10 10 (surfaceAbove tileMap)
             drawWindowEndPaint drawable
             return True
@@ -102,8 +115,8 @@ main = do
         surfaceAbove tileMap (x, y) = tileAbove (tileMap ! (x, y + 1))
 
 drawCharacters :: Int -> Int -> Int -> Int -> Surface -> Render ()
-drawTiles w h x y surface = do
-    setSourceSurface s 100 100
+drawCharacters w h x y surface = do
+    setSourceSurface surface 120 80
     paint
 
 drawTiles :: Int -> Int -> Int -> Int -> ((Int, Int) -> Surface) -> Render ()
