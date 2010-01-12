@@ -3,18 +3,17 @@ import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
 import Control.Concurrent
 main :: IO ()
-main= do
+main = do
      initGUI
      window <- windowNew
-     --windowFullscreen window
-     set window [windowTitle := "Hello Cairo 4",
-                 windowDefaultWidth := 800, windowDefaultHeight := 600,
-                 containerBorderWidth := 15 ]
-
-     frame <- frameNew
-     containerAdd window frame
+     windowFullscreen window
+     set window [windowTitle := "Guts",
+                 windowDefaultWidth := 800, 
+                 windowDefaultHeight := 600,
+                 containerBorderWidth := 0]
+                 
      canvas <- drawingAreaNew
-     containerAdd frame canvas
+     containerAdd window canvas
 
      widgetShowAll window 
      onExpose canvas (\x ->  do (w,h) <- widgetGetSize canvas
@@ -23,14 +22,8 @@ main= do
                                     (myDraw (fromIntegral w)(fromIntegral h))
                                 return (eventSent x))
     
-     putStrLn "Before Wait"
-     threadDelay 1000000
-     putStrLn "After Wait"
-
      onDestroy window mainQuit
-     putStrLn "Before mainGUI"
      mainGUI
-     putStrLn "After mainGUI"
 
 myDraw :: Double -> Double -> Render ()
 myDraw w h = do
