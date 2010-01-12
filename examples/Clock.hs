@@ -12,6 +12,7 @@
 
 import Graphics.Rendering.Cairo
 import Graphics.UI.Gtk hiding (fill)
+import Graphics.UI.Gtk.Gdk.Events
 import System.Glib (handleGError, GError(..))
 import System.Time
 import Control.Monad (when)
