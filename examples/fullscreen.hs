@@ -1,4 +1,5 @@
 import Graphics.UI.Gtk  hiding (fill)
+import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
 import Control.Concurrent
 main :: IO ()
@@ -7,7 +8,7 @@ main= do
      window <- windowNew
      --windowFullscreen window
      set window [windowTitle := "Hello Cairo 4",
-                 windowDefaultWidth := 300, windowDefaultHeight := 200,
+                 windowDefaultWidth := 800, windowDefaultHeight := 600,
                  containerBorderWidth := 15 ]
 
      frame <- frameNew
