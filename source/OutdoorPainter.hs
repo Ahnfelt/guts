@@ -19,7 +19,7 @@ outdoorPainter s = do
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
         denseGrassTile s = do
-            let (w, h) = (tileWidth * 2, tileHeight * 2)
+            let (w, h) = (tileWidth * 1.90, tileHeight * 1.90)
             let (m, d) = (5, 0.15)
             i <- createImageSurface FormatARGB32 (fromIntegral h) (fromIntegral w)
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
@@ -47,44 +47,6 @@ grassPainter sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
         let (x', y') = (fromIntegral x - fromIntegral tileHeight * 0.5, fromIntegral y - fromIntegral tileHeight * 0.5)
         setSourceSurface si5 x' y'
         paint
-
-        {-case (tn, ts, tw, te) of
-        (OutdoorGrass, OutdoorGrass, OutdoorGrass, OutdoorGrass) -> do
-        (OutdoorGrass, OutdoorGrass, _, _) -> do
-            let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
-            setSourceSurface si2 x' y'
-            paint
-            let (x', y') = (fromIntegral x, fromIntegral y + fromIntegral tileHeight * 0.5)
-            setSourceSurface si3 x' y'
-            paint
-        (_, _, OutdoorGrass, OutdoorGrass) -> do
-            let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y)
-            setSourceSurface si2 x' y'
-            paint
-            let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.5, fromIntegral y)
-            setSourceSurface si3 x' y'
-            paint
-        (OutdoorGrass, _, OutdoorGrass, _) -> do
-            let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
-            setSourceSurface si2 x' y'
-            paint
-            let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
-            setSourceSurface si3 x' y'
-            paint
-            let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y)
-            setSourceSurface si2 x' y'
-            paint
-            let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y)
-            setSourceSurface si3 x' y'
-            paint
-        (OutdoorGrass, _, _, _) -> do
-            let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
-            setSourceSurface si2 x' y'
-            paint
-        (_, _, OutdoorGrass, _) -> do
-            let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y)
-            setSourceSurface si3 x' y'
-            paint-}
     setSourceSurface si1 (fromIntegral x) (fromIntegral y)
     paint
     where
