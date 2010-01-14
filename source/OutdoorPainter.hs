@@ -1,15 +1,26 @@
-module OutdoorPainter (outdoorPainter) where
+module OutdoorPainter (roadPainter, grassPainter) where
 import Graphics.Rendering.Cairo
 import System.Random
 import Control.Monad (when)
 import Tile
 
-outdoorPainter :: Int -> IO TilePainter
-outdoorPainter s = do
+roadPainter :: Int -> IO TilePainter
+roadPainter s = do
+    return $ \t ts1 ts2 x y s -> case t of
+        OutdoorRoad -> Just (paintRoad t ts1 ts2 x y s)
+        _ -> Nothing
+
+paintRoad t ts1 ts2 x y s = do
+    setSourceRGB 1.0 0.2 0.2
+    rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
+    fill
+
+grassPainter :: Int -> IO TilePainter
+grassPainter s = do
     sparseGrassTiles <- mapM sparseGrassTile (take 30 $ randoms $ mkStdGen s)
     denseGrassTiles <- mapM denseGrassTile (take 30 $ randoms $ mkStdGen s)
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorGrass -> Just (grassPainter sparseGrassTiles denseGrassTiles t ts1 ts2 x y s)
+        OutdoorGrass -> Just (paintGrass sparseGrassTiles denseGrassTiles t ts1 ts2 x y s)
         _ -> Nothing
     where
         sparseGrassTile s = do
@@ -19,17 +30,17 @@ outdoorPainter s = do
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
         denseGrassTile s = do
-            let (w, h) = (tileWidth * 1.90, tileHeight * 1.90)
+            let (w, h) = (tileWidth * 2 - tileWidth `div` 4, tileHeight * 2 - tileHeight `div` 4)
             let (m, d) = (5, 0.15)
             i <- createImageSurface FormatARGB32 (fromIntegral h) (fromIntegral w)
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
 
-grassPainter sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
+paintGrass sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
     let si1:si2:si3:si4:si5:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
     when (like tn && like ts && like tw && like te) $ do
         let di1:di2:_ = map (dis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
-        let (x', y') = (x - (fromIntegral $ tileWidth `div` 2), y - (fromIntegral $ tileHeight `div` 2))
+        let (x', y') = (x - (fromIntegral $ tileWidth `div` 2 - tileWidth `div` 8), y - (fromIntegral $ tileHeight `div` 2 - tileHeight `div` 8))
         setSourceSurface di1 (fromIntegral x') (fromIntegral y')
         paint
     when (like tn) $ do

@@ -40,15 +40,17 @@ type TilePainter =
 newtype TileMap = TileMap (DiffArray (Int, Int) Tile)
 
 tileGet :: TileMap -> Int -> Int -> Tile
-tileGet (TileMap a) x y = a ! (x, y)
+tileGet (TileMap a) x y = let ((x1, y1), (x2, y2)) = bounds a in
+    if x >= x1 && y >= y1 && x <= x2 && y <= y2 then a ! (x, y) else Abyss
 
 tileSet :: TileMap -> Int -> Int -> Tile -> TileMap
-tileSet (TileMap a) x y t = TileMap (a // [((x, y), t)])
+tileSet (TileMap a) x y t = let ((x1, y1), (x2, y2)) = bounds a in
+    if x >= x1 && y >= y1 && x <= x2 && y <= y2 then TileMap (a // [((x, y), t)]) else TileMap a
 
 tileMap :: [[Char]] -> TileMap
 tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (map tile $ concat $ transpose l)
     where
-        tile '*' = OutdoorTree
+        tile '*' = OutdoorRoad
         tile _ = OutdoorGrass
 
 tileMapEmpty :: Int -> Int -> TileMap

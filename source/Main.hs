@@ -11,34 +11,34 @@ import OutdoorPainter
 
 ascii = [
     "************************************************************",
-    "*****    ** *         **                             *******",
+    "*****    ** *         ****   *    ***       **       *******",
     "****** ************  ***                                ****",
     "********    ********  **                                  **",
     "********    ***********                                   **",
     "*           *       *               *                     **",
     "*           *       *               *                      *",
     "* *******************                                      *",
-    "***** ****     ****                                        *",
+    "***** *****    ****                                        *",
     "****   ***                                                **",
     "***** ****                                                **",
-    "*   ******                                               ***",
+    "** *******                                               ***",
     "*   ******                                *             ****",
     "*     **                                 ***            ****",
-    "*                    *                   **              ***",
-    "*                                                        ***",
-    "*                                                         **",
+    "**                   *                   **              ***",
+    "***                                                      ***",
+    "**                                                        **",
     "*                                                          *",
     "*                                                         **",
     "*             *                                          ***",
     "*                                                        ***",
-    "*                                          **             **",
-    "*                                                          *",
+    "**                                         **             **",
+    "**                                                         *",
     "*                         *                                *",
     "*                                                          *",
     "*                                                          *",
     "***                                                        *",
-    "****                                                      **",
-    "*******                                                 ****",
+    "****              **                                      **",
+    "*******    *     *****      *     *    ***      *       ****",
     "************************************************************"
     ]
 
@@ -64,7 +64,7 @@ main = do
     containerAdd window canvas
     widgetShowAll window 
 
-    painters <- mapM (\f -> f $ head $ randoms $ mkStdGen 42) [outdoorPainter]
+    painters <- mapM (\f -> f $ head $ randoms $ mkStdGen 42) [roadPainter, grassPainter]
 
     backgroundSurface <- createImageSurface FormatRGB24 10000 10000
     renderWith backgroundSurface (drawBackground (tileMap ascii) painters)
@@ -87,16 +87,16 @@ main = do
             setSourceRGB 0.15 0.20 0.05
             rectangle 0 0 10000 10000
             fill
-            mapM_ (paintTile ps) $ zip (randoms $ mkStdGen 7) (tileCoordinates m)
+            mapM_ (paintTiles 42) ps
             where
-                paintTile [] _ = return ()
-                paintTile (p:ps) (s, (x, y)) = do
+                paintTiles s p = mapM_ (paintTile p) $ zip (randoms $ mkStdGen s) (tileCoordinates m)
+                paintTile p (s, (x, y)) = do
                     let t = tileGet m x y
                     let ts1 = (tileGet m (x) (y - 1), tileGet m (x) (y + 1), tileGet m (x - 1) (y), tileGet m (x + 1) (y))
                     let ts2 = (tileGet m (x - 1) (y - 1), tileGet m (x + 1) (y - 1), tileGet m (x - 1) (y + 1), tileGet m (x + 1) (y + 1))
                     case p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s of
                         Just d -> d 
-                        Nothing -> paintTile ps (s, (x, y))
+                        Nothing -> return ()
                     
                     
 {-        drawGrass r x y w h = do
