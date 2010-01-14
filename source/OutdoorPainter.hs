@@ -11,7 +11,7 @@ roadPainter s = do
         _ -> Nothing
 
 paintRoad t ts1 ts2 x y s = do
-    setSourceRGB 1.0 0.2 0.2
+    setSourceRGB 0.2 0.2 0.2
     rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
     fill
 
