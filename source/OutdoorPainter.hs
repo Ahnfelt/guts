@@ -11,7 +11,7 @@ roadPainter s = do
         _ -> Nothing
 
 paintRoad t ts1 ts2 x y s = do
-    setSourceRGB 0.2 0.2 0.2
+    setSourceRGB 0.4 0.4 0.4
     rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
     fill
 
@@ -30,35 +30,56 @@ grassPainter s = do
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
         denseGrassTile s = do
-            let (w, h) = (tileWidth * 2 - tileWidth `div` 4, tileHeight * 2 - tileHeight `div` 4)
-            let (m, d) = (5, 0.15)
+            let (w, h) = (tileWidth, tileHeight)
+            let (m, d) = (0, 0.40)
             i <- createImageSurface FormatARGB32 (fromIntegral h) (fromIntegral w)
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
 
 paintGrass sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
-    let si1:si2:si3:si4:si5:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
-    when (like tn && like ts && like tw && like te) $ do
-        let di1:di2:_ = map (dis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
-        let (x', y') = (x - (fromIntegral $ tileWidth `div` 2 - tileWidth `div` 8), y - (fromIntegral $ tileHeight `div` 2 - tileHeight `div` 8))
-        setSourceSurface di1 (fromIntegral x') (fromIntegral y')
-        paint
+    let di1:_ = map (dis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
+    setSourceSurface di1 (fromIntegral x) (fromIntegral y)
+    paint
+    let si1:si2:si3:si4:si5:si6:si7:si8:si9:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
+    let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
+    setSourceSurface si1 x' y'
+    paint
+    let (x', y') = (fromIntegral x, fromIntegral y + fromIntegral tileHeight * 0.5)
+    setSourceSurface si2 x' y'
+    paint
+    let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y)
+    setSourceSurface si3 x' y'
+    paint
+    let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.5, fromIntegral y)
+    setSourceSurface si4 x' y'
+    paint
     when (like tn) $ do
-        let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
-        setSourceSurface si2 x' y'
-        paint
-    when (like tw) $ do
-        let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y)
-        setSourceSurface si3 x' y'
-        paint
-    when (like tn && like tw && like tnw) $ do
-        let (x', y') = (fromIntegral x - fromIntegral tileHeight * 0.5, fromIntegral y - fromIntegral tileHeight * 0.5)
-        setSourceSurface si4 x' y'
-        paint
-        let (x', y') = (fromIntegral x - fromIntegral tileHeight * 0.5, fromIntegral y - fromIntegral tileHeight * 0.5)
+        let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y - fromIntegral tileHeight * 0.5)
         setSourceSurface si5 x' y'
         paint
-    setSourceSurface si1 (fromIntegral x) (fromIntegral y)
+        let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.5, fromIntegral y - fromIntegral tileHeight * 0.5)
+        setSourceSurface si6 x' y'
+        paint
+    when (like tw) $ do
+        let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y - fromIntegral tileHeight * 0.5)
+        setSourceSurface si7 x' y'
+        paint
+        let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.5, fromIntegral y + fromIntegral tileHeight * 0.5)
+        setSourceSurface si8 x' y'
+        paint
+    let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.3, fromIntegral y - fromIntegral tileHeight * 0.3)
+    setSourceSurface si5 x' y'
+    paint
+    let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.3, fromIntegral y - fromIntegral tileHeight * 0.3)
+    setSourceSurface si5 x' y'
+    paint
+    let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.3, fromIntegral y + fromIntegral tileHeight * 0.3)
+    setSourceSurface si5 x' y'
+    paint
+    let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.3, fromIntegral y + fromIntegral tileHeight * 0.3)
+    setSourceSurface si5 x' y'
+    paint
+    setSourceSurface si9 (fromIntegral x) (fromIntegral y)
     paint
     where
         like OutdoorGrass = True
@@ -72,7 +93,7 @@ drawGrass x y w h m d s = do
     mapM_ drawStraw l
 
 drawStraw (r, x, y) = do
-    setLineWidth 3.0
+    setLineWidth 4.0
     setLineCap LineCapRound
     setSourceRGB 0.1 0.2 0
     let (b, r') = randomR (0, 2 * pi) r
