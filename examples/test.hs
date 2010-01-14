@@ -1,5 +1,4 @@
 import Control.Concurrent.MVar
-import System.IO.Unsafe
 import Graphics.UI.Gtk hiding (fill, Solid)
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
@@ -106,6 +105,39 @@ main = do
                 scale 2 2
                 drawTiles (w `div` 2) (h `div` 2) 10 10 (tileSurface . (tileMap !))
                 drawCharacters (w `div` 2) (h `div` 2) 10 10 manSurface
+                {-setLineWidth 1.0
+                let drawing = do
+                        lineTo 0 (38 + 16)
+                        arcNegative 16 16 38 (pi / 2) 0
+                        lineTo (38 + 16) 0
+                moveTo 0 0
+                drawing
+                setSourceRGB 0.5 0.5 0.6
+                fill
+                moveTo 0 (38 + 16)
+                setSourceRGB 0 0 0
+                drawing
+                stroke-}
+                setLineCap LineCapRound
+                setLineWidth 6.0
+                setSourceRGB 0 0 0
+                arcNegative 16 16 35 (pi / 2) 0
+                stroke
+                setLineCap LineCapButt
+                setLineWidth 4.0
+                setSourceRGB 0.6 0 0
+                arcNegative 16 16 35 (pi / 2) 0.3
+                stroke
+                setLineCap LineCapRound
+                setLineWidth 4.0
+                setSourceRGB 1 0 0
+                arcNegative 16 16 35 (pi / 2) (pi / 2 - 0.001)
+                stroke
+                setLineCap LineCapButt
+                setLineWidth 4.0
+                setSourceRGB 1 0 0
+                arcNegative 16 16 35 (pi / 2) 0.5
+                stroke
             drawWindowEndPaint drawable
             return True
 
