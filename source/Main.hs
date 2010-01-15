@@ -7,37 +7,38 @@ import System.Random
 import GameState
 import Player
 import Tile
-import OutdoorPainter
+import qualified OutdoorPainter
+import qualified BasePainter
 
 ascii = [
     "************************************************************",
-    "*****    ** *         ****   *    ***       **       *******",
-    "****** ************  ***                                ****",
-    "********    ********  **                                  **",
-    "********    ***********                                   **",
-    "*           *       *               *                     **",
-    "*           *       *               *                      *",
-    "* *******************                                      *",
+    "********************bbb***   *    ***       **       *******",
+    "********************bbb*                                ****",
+    "************************                                  **",
+    "***********************                                   **",
+    "*********************               *                     **",
+    "*********************               *                      *",
+    "*********************                                      *",
     "***** *****    ****                                        *",
     "****   ***                                                **",
     "***** ****                                                **",
     "** *******                                               ***",
-    "*   ******                                *             ****",
-    "*     **                                 ***            ****",
+    "*   ******                                *             bbb*",
+    "*     **                                 ***            bbb*",
     "**                   *                   **              ***",
-    "***                                                      ***",
-    "**                                                        **",
-    "*                                                          *",
-    "*                                                         **",
-    "*             *                                          ***",
-    "*                                                        ***",
-    "**                                         **             **",
-    "**                                                         *",
-    "*                         *                                *",
-    "*                                                          *",
-    "*                                                          *",
-    "***                                                        *",
-    "****              **                                      **",
+    "***                        bbbbb   bbbbb              ******",
+    "**                         bbbbb  bb   b           *********",
+    "*                          bbbbb  b    bb        ***********",
+    "*                          bbbbb  bb   bb      *******    **",
+    "*             *            bbbbb  b  bbb      *****      ***",
+    "*                                 bbbb     *****         ***",
+    "**                                       *****            **",
+    "**                                      ****               *",
+    "*                         *              **                *",
+    "*                                       ***                *",
+    "*                                       ***                *",
+    "***                                    ****                *",
+    "****              **                   ***                **",
     "*******    *     *****      *     *    ***      *       ****",
     "************************************************************"
     ]
@@ -48,6 +49,11 @@ data Foo = Foo
 
 instance Entity Foo where
     entityOnTop _ = False
+
+painterGenerators = [
+    OutdoorPainter.roadPainter, 
+    BasePainter.blockPainter,
+    OutdoorPainter.grassPainter]
 
 main :: IO ()
 main = do
@@ -64,12 +70,12 @@ main = do
     containerAdd window canvas
     widgetShowAll window 
 
-    painters <- mapM (\f -> f $ head $ randoms $ mkStdGen 42) [roadPainter, grassPainter]
+    painters <- mapM (\f -> f $ head $ randoms $ mkStdGen 42) painterGenerators
 
     backgroundSurface <- createImageSurface FormatRGB24 10000 10000
     renderWith backgroundSurface (drawBackground (tileMap ascii) painters)
 
-    timeoutAdd (updateGraphics canvas backgroundSurface (0, 0)) (1000 `div` graphicalFps)
+    timeoutAdd (updateGraphics canvas backgroundSurface (450, 000)) (1000 `div` graphicalFps)
     onDestroy window mainQuit
     mainGUI
     
@@ -94,29 +100,7 @@ main = do
                     let t = tileGet m x y
                     let ts1 = (tileGet m (x) (y - 1), tileGet m (x) (y + 1), tileGet m (x - 1) (y), tileGet m (x + 1) (y))
                     let ts2 = (tileGet m (x - 1) (y - 1), tileGet m (x + 1) (y - 1), tileGet m (x - 1) (y + 1), tileGet m (x + 1) (y + 1))
-                    case p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s of
-                        Just d -> d 
-                        Nothing -> return ()
-                    
-                    
-{-        drawGrass r x y w h = do
-            let xs = randomRs (x, x + w) (mkStdGen 7)
-            let ys = randomRs (y, y + h) (mkStdGen 8)
-            let rs = map mkStdGen (randoms (mkStdGen 9))
-            let l = take (round (w * h * 0.10)) $ zip3 rs xs ys
-            let r' = mkStdGen 42
-            mapM_ drawStraw l
-        drawStraw (r, x, y) = do
-            setLineWidth 3.0
-            setLineCap LineCapRound
-            setSourceRGB 0.1 0.2 0
-            let (b, r') = randomR (0, 2 * pi) r
-            let (e, r'') = randomR (0, 0.1 * pi + 0.5 * pi) r'
-            arc (x) (y + 6) 5 b (b + e)
-            stroke
-            setLineWidth 2.0
-            setSourceRGB 0.1 0.5 0
-            arc (x) (y + 6) 5 b (b + e)
-            stroke
-            return r''
-            -}
+                    save
+                    p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
+                    restore
+

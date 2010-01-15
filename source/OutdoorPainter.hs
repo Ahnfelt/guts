@@ -8,18 +8,18 @@ grassPainter :: Int -> IO TilePainter
 grassPainter s = do
     grassTiles <- mapM grassTile (take 30 $ randoms $ mkStdGen s)
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorGrass -> Just (paintGrass grassTiles t ts1 ts2 x y s)
-        _ -> Nothing
+        OutdoorGrass -> paintGrass grassTiles t ts1 ts2 x y s
+        _ -> return ()
     where
         grassTile s = do
             let (w, h) = (fromIntegral tileWidth, fromIntegral tileHeight)
-            let (m, d) = (5, 0.02)
+            let (m, d) = (5, 0.03)
             i <- createImageSurface FormatARGB32 h w
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
 
 paintGrass sis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
-    setSourceRGB 0.10 0.25 0.05
+    setSourceRGB 0.05 0.20 0.05
     rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
     fill
     let si1:si2:si3:si4:si5:si6:si7:si8:si9:si10:si11:si12:si13:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
@@ -75,27 +75,30 @@ drawGrass x y w h m d s = do
     mapM_ drawStraw l
 
 drawStraw (r, x, y) = do
-    setLineWidth 4.0
-    setLineCap LineCapRound
-    setSourceRGB 0.1 0.2 0
     let (b, r') = randomR (0, 2 * pi) r
-    let (e, _) = randomR (0, 0.1 * pi + 0.5 * pi) r'
-    arc (x) (y) 5 b (b + e)
+    let (e, r'') = randomR (0, 0.1 * pi + 0.5 * pi) r'
+    let (l, r''') = randomR (2.0, 4.0) r''
+    let (c, r'''') = randomR (0.3, 0.5) r'''
+    let (s, _) = randomR (4.0, 6.0) r''''
+    setLineWidth l
+    setLineCap LineCapRound
+    setSourceRGB 0.05 0.2 0.0
+    arc (x) (y) s b (b + e)
     stroke
-    setLineWidth 2.0
-    setSourceRGB 0.1 0.5 0
-    arc (x) (y) 5 b (b + e)
+    setLineWidth (l / 2)
+    setSourceRGB 0.1 c 0.0
+    arc (x) (y) s b (b + e)
     stroke
 
 
 roadPainter :: Int -> IO TilePainter
 roadPainter s = do
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorRoad -> Just (paintRoad t ts1 ts2 x y s)
-        _ -> Nothing
+        OutdoorRoad -> paintRoad t ts1 ts2 x y s
+        _ -> return ()
 
 paintRoad t ts1 ts2 x y s = do
-    setSourceRGB 0.20 0.20 0.10
+    setSourceRGB 0.10 0.10 0.10
     rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
     fill
     let r1:r2:r3:r4:r5:r6:rs = map mkStdGen $ randoms (mkStdGen s)
@@ -109,7 +112,7 @@ paintRoad t ts1 ts2 x y s = do
     mapM_ drawStones $ take 100 (zip3 (zip xs ys) (zip zs cs) (zip as bs))
     where
         drawCrack ((x, y), (z, cs), (a, b)) = do
-            setSourceRGB (cs - 0.1) (cs - 0.1) cs
+            setSourceRGB (cs - 0.10) (cs - 0.10) (cs - 0.05)
             arc x y (z + 1) a (a + b)
             fill
             setSourceRGB cs cs cs

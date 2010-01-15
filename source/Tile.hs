@@ -12,6 +12,7 @@ data Tile
     | BaseWall
     | BaseFloor
     | BaseGrid
+    | BaseBlock
     | Abyss
     deriving Eq
 
@@ -35,7 +36,7 @@ type TilePainter =
     (Tile, Tile, Tile, Tile) -> -- northWest, northEast, southWest, southEast
     Int -> Int -> -- x y
     Int -> -- random seed
-    Maybe (Render ())
+    Render ()
 
 newtype TileMap = TileMap (DiffArray (Int, Int) Tile)
 
@@ -50,6 +51,7 @@ tileSet (TileMap a) x y t = let ((x1, y1), (x2, y2)) = bounds a in
 tileMap :: [[Char]] -> TileMap
 tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (map tile $ concat $ transpose l)
     where
+        tile 'b' = BaseBlock
         tile '*' = OutdoorRoad
         tile _ = OutdoorGrass
 
