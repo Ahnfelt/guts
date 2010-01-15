@@ -6,29 +6,22 @@ import Tile
 
 grassPainter :: Int -> IO TilePainter
 grassPainter s = do
-    sparseGrassTiles <- mapM sparseGrassTile (take 30 $ randoms $ mkStdGen s)
-    denseGrassTiles <- mapM denseGrassTile (take 30 $ randoms $ mkStdGen s)
+    grassTiles <- mapM grassTile (take 30 $ randoms $ mkStdGen s)
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorGrass -> Just (paintGrass sparseGrassTiles denseGrassTiles t ts1 ts2 x y s)
+        OutdoorGrass -> Just (paintGrass grassTiles t ts1 ts2 x y s)
         _ -> Nothing
     where
-        sparseGrassTile s = do
+        grassTile s = do
             let (w, h) = (fromIntegral tileWidth, fromIntegral tileHeight)
             let (m, d) = (5, 0.02)
             i <- createImageSurface FormatARGB32 h w
             renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
             return i
-        denseGrassTile s = do
-            let (w, h) = (tileWidth, tileHeight)
-            let (m, d) = (0, 0.40)
-            i <- createImageSurface FormatARGB32 (fromIntegral h) (fromIntegral w)
-            renderWith i (drawGrass 0 0 (fromIntegral h) (fromIntegral w) m d s)
-            return i
 
-paintGrass sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
-    let di1:_ = map (dis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
-    setSourceSurface di1 (fromIntegral x) (fromIntegral y)
-    paint
+paintGrass sis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
+    setSourceRGB 0.10 0.25 0.05
+    rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
+    fill
     let si1:si2:si3:si4:si5:si6:si7:si8:si9:si10:si11:si12:si13:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
     let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
     setSourceSurface si1 x' y'
