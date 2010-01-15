@@ -22,8 +22,8 @@ tileSolid OutdoorLake = True
 tileSolid BaseWall = True
 tileSolid _ = False
 
-tileWidth = 30
-tileHeight = 30
+tileWidth = 32
+tileHeight = 32
 
 -- A painter is a function that may draw a tile based on the tile and surrounding tiles.
 -- The map is painted in scanlines (rows) from left to right and top to bottom, and the

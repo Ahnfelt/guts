@@ -4,17 +4,6 @@ import System.Random
 import Control.Monad (when)
 import Tile
 
-roadPainter :: Int -> IO TilePainter
-roadPainter s = do
-    return $ \t ts1 ts2 x y s -> case t of
-        OutdoorRoad -> Just (paintRoad t ts1 ts2 x y s)
-        _ -> Nothing
-
-paintRoad t ts1 ts2 x y s = do
-    setSourceRGB 0.4 0.4 0.4
-    rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
-    fill
-
 grassPainter :: Int -> IO TilePainter
 grassPainter s = do
     sparseGrassTiles <- mapM sparseGrassTile (take 30 $ randoms $ mkStdGen s)
@@ -40,7 +29,7 @@ paintGrass sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
     let di1:_ = map (dis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
     setSourceSurface di1 (fromIntegral x) (fromIntegral y)
     paint
-    let si1:si2:si3:si4:si5:si6:si7:si8:si9:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
+    let si1:si2:si3:si4:si5:si6:si7:si8:si9:si10:si11:si12:si13:_ = map (sis !!) $ randomRs (0, length sis - 1) (mkStdGen s)
     let (x', y') = (fromIntegral x, fromIntegral y - fromIntegral tileHeight * 0.5)
     setSourceSurface si1 x' y'
     paint
@@ -68,18 +57,18 @@ paintGrass sis dis _ (tn, ts, tw, te) (tnw, tne, tsw, tse) x y s = do
         setSourceSurface si8 x' y'
         paint
     let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.3, fromIntegral y - fromIntegral tileHeight * 0.3)
-    setSourceSurface si5 x' y'
+    setSourceSurface si9 x' y'
     paint
     let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.3, fromIntegral y - fromIntegral tileHeight * 0.3)
-    setSourceSurface si5 x' y'
+    setSourceSurface si10 x' y'
     paint
     let (x', y') = (fromIntegral x - fromIntegral tileWidth * 0.3, fromIntegral y + fromIntegral tileHeight * 0.3)
-    setSourceSurface si5 x' y'
+    setSourceSurface si11 x' y'
     paint
     let (x', y') = (fromIntegral x + fromIntegral tileWidth * 0.3, fromIntegral y + fromIntegral tileHeight * 0.3)
-    setSourceSurface si5 x' y'
+    setSourceSurface si12 x' y'
     paint
-    setSourceSurface si9 (fromIntegral x) (fromIntegral y)
+    setSourceSurface si13 (fromIntegral x) (fromIntegral y)
     paint
     where
         like OutdoorGrass = True
@@ -104,4 +93,38 @@ drawStraw (r, x, y) = do
     setSourceRGB 0.1 0.5 0
     arc (x) (y) 5 b (b + e)
     stroke
+
+
+roadPainter :: Int -> IO TilePainter
+roadPainter s = do
+    return $ \t ts1 ts2 x y s -> case t of
+        OutdoorRoad -> Just (paintRoad t ts1 ts2 x y s)
+        _ -> Nothing
+
+paintRoad t ts1 ts2 x y s = do
+    setSourceRGB 0.20 0.20 0.10
+    rectangle (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight)
+    fill
+    let r1:r2:r3:r4:r5:r6:rs = map mkStdGen $ randoms (mkStdGen s)
+    let xs = randomRs (fromIntegral x, fromIntegral x + fromIntegral tileWidth) r1
+    let ys = randomRs (fromIntegral y, fromIntegral y + fromIntegral tileHeight) r2
+    let zs = randomRs (1, 5) r3
+    let cs = randomRs (0.10, 0.20) r4
+    let as = randomRs (0, 2 * pi) r5
+    let bs = randomRs (pi / 2, pi) r6
+    mapM_ drawCrack $ take 100 (zip3 (zip xs ys) (zip zs cs) (zip as bs))
+    mapM_ drawStones $ take 100 (zip3 (zip xs ys) (zip zs cs) (zip as bs))
+    where
+        drawCrack ((x, y), (z, cs), (a, b)) = do
+            setSourceRGB (cs - 0.1) (cs - 0.1) cs
+            arc x y (z + 1) a (a + b)
+            fill
+            setSourceRGB cs cs cs
+            arc x y z a (a + b)
+            fill
+        drawStones ((x, y), (z, cs), (a, b)) = do
+            setSourceRGB cs cs cs
+            arc x y (z / 2 + 1) 0 pi
+            fill
+
 
