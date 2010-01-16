@@ -8,10 +8,10 @@ data Player = Player {
 
 instance Entity Player where
 
-    entityUpdate e s d = do
+    entityUpdate e s d =
         let (x, y) = playerPosition e
-        let e' = e { playerPosition = (x + 1 * d, y) }
-        Update { updateEntities = [entity e'], updateSplatter = return () }
+            e' = e { playerPosition = (x + 1 * d, y) }
+        in Update { updateEntities = [entity e'], updateSplatter = return () }
     
     entityPosition e = Just (playerPosition e)
 
