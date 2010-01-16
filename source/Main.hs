@@ -58,9 +58,10 @@ instance Entity Foo where
 painterGenerators = [
     OutdoorPainter.rockPainter,
     OutdoorPainter.grassPainter (\t -> t == OutdoorGrass) 0.5,
+    OutdoorPainter.cloverPainter,
     BasePainter.blockPainter,
-    OutdoorPainter.grassPainter (\t -> t == OutdoorBush) 0.8,
-    OutdoorPainter.flowerPainter]
+    OutdoorPainter.grassPainter (\t -> t == OutdoorBush) 0.8]
+    --OutdoorPainter.flowerPainter]
 
 main :: IO ()
 main = do
@@ -83,7 +84,7 @@ main = do
     backgroundSurface <- createImageSurface FormatRGB24 (tileMapWidth world * tileWidth) (tileMapHeight world * tileHeight)
     renderWith backgroundSurface (drawBackground world painters)
 
-    timeoutAdd (updateGraphics canvas backgroundSurface (450, 0)) (1000 `div` graphicalFps)
+    timeoutAdd (updateGraphics canvas backgroundSurface (0, 0)) (1000 `div` graphicalFps)
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
         "Escape" -> do

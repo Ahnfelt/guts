@@ -1,4 +1,4 @@
-module OutdoorPainter (rockPainter, grassPainter, flowerPainter) where
+module OutdoorPainter (rockPainter, grassPainter, flowerPainter, cloverPainter) where
 import Graphics.Rendering.Cairo
 import System.Random
 import Control.Monad (when)
@@ -96,7 +96,7 @@ flowerPainter s = do
     where
         paintFlower x y s = do
             let r1:r2:r3:r4:r5:_ = map mkStdGen $ randoms $ mkStdGen s
-            when ((fst (random r1) :: Double) < 0.50) $ do
+            when ((fst (random r1) :: Double) < 0.40) $ do
                 let x' = fromIntegral $ fst $ randomR (x, x + tileWidth - 1) r2
                 let y' = fromIntegral $ fst $ randomR (y, y + tileHeight - 1) r3
                 let a = fst $ randomR (0, 2 * pi) r4
@@ -125,6 +125,36 @@ flowerPainter s = do
                     arc d 0 r 0 (2 * pi)
                     stroke
                     restore
+
+
+cloverPainter :: Int -> IO TilePainter
+cloverPainter s = do
+    return $ \t ts1 ts2 x y s -> case t of
+        OutdoorGrass -> paintClover x y s
+        _ -> return ()
+    where
+        paintClover x y s = do 
+            let r1:r2:r3:r4:r5:_ = map mkStdGen $ randoms $ mkStdGen s
+            when ((fst (random r1) :: Double) < 0.50) $ do
+                let x' = fromIntegral $ fst $ randomR (x, x + tileWidth - 1) r2
+                let y' = fromIntegral $ fst $ randomR (y, y + tileHeight - 1) r3
+                let a = fst $ randomR (0, 2 * pi) r4
+                let z = fst $ randomR (0, 1) r5
+                save
+                translate x' y'
+                rotate a
+                setSourceRGB 0 (0.2 + 0.2 * z) 0
+                arc 0 0 (1 + 2 * z) 0 (2 * pi)
+                fill
+                setSourceRGBA 0 0 0 0.2
+                setLineWidth 1
+                arc 0 0 (1 + 2 * z) 0 (2 * pi)
+                stroke
+                setSourceRGBA 0 0 0 0.5
+                arc 0 0 (1 + 2 * z) 0 (0.4 * pi)
+                lineTo 0 0
+                fill
+                restore
 
 
 rockPainter :: Int -> IO TilePainter
