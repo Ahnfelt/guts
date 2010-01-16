@@ -5,42 +5,42 @@ import Graphics.Rendering.Cairo
 import Data.Array.Diff
 import System.Random
 import GameState
-import Player
+import PlayerEntity
 import Tile
 import qualified OutdoorPainter
 import qualified BasePainter
 
 ascii = [
-    "************************************************************",
-    "********************bbb***   *    ***       **       *******",
-    "********************bbb*                                ****",
-    "************************                                  **",
-    "***********************                                   **",
-    "*********************               *                     **",
-    "*********************               *                      *",
-    "*********************                                      *",
+    "*****************`bbb``*************************************",
+    "*****************`bbb`****   *    ***       **       *******",
+    "*****************`````**                                ****",
+    "******* **********```***                    *             **",
+    "***********************       *                    *      **",
+    "*************** *****               *                     **",
+    "*********************    *          *    *          *      *",
+    "*********************                          *           *",
     "***** *****    ****                                        *",
-    "****   ***                                                **",
-    "***** ****                                                **",
-    "** *******                                               ***",
-    "*   ******                                *             bbb*",
-    "*     **                                 ***            bbb*",
+    "****   ***              **                       *        **",
+    "***** ****                   *        *              *    **",
+    "** *******     *                                         ***",
+    "*   ******   *             `              *    *        bbb*",
+    "*     **                    *            *`*       *    bbb*",
     "**                   *                   **              ***",
-    "***                        bbbbb   bbbbb              ******",
-    "**                         bbbbb  bb   b           *********",
-    "*                          bbbbb  b    bb        ***********",
-    "*                          bbbbb  bb   bb      *******    **",
-    "*             *            bbbbb  b  bbb      *****      ***",
-    "*                                 bbbb     *****         ***",
-    "**                                       *****            **",
-    "**                                      ****               *",
-    "*                         *              **                *",
-    "*                                       ***                *",
-    "*                                       ***                *",
-    "***                                    ****                *",
-    "****              **                   ***                **",
-    "*******    *     *****      *     *    ***      *       ****",
-    "************************************************************"
+    "***              *                 bbbbb              ******",
+    "**        *                       bb   b      *    ***``````",
+    "*      *                *`*       b    bb        **````*****",
+    "*       *         *    *```*      bb   bb      **```**    **",
+    "*             *         ***       b  bbb      *`***      ***",
+    "*                   *             bbbb     ***`*         ***",
+    "**                                       **`**            **",
+    "**     *                    *           **`*               *",
+    "*        *      *         **             *`        *       *",
+    "*       `      *                  *     *`*                *",
+    "*                        *    *         *`*    `     *     *",
+    "***         *`                         **`*                *",
+    "****              **                   *`*                **",
+    "*******    *     *****      *     *    *`*      *       ****",
+    "****************************************`*******************"
     ]
 
 graphicalFps = 30
@@ -51,9 +51,11 @@ instance Entity Foo where
     entityOnTop _ = False
 
 painterGenerators = [
-    OutdoorPainter.roadPainter, 
+    OutdoorPainter.rockPainter,
+    OutdoorPainter.grassPainter (\t -> t == OutdoorGrass) 0.5,
     BasePainter.blockPainter,
-    OutdoorPainter.grassPainter]
+    OutdoorPainter.grassPainter (\t -> t == OutdoorBush) 0.8,
+    OutdoorPainter.flowerPainter]
 
 main :: IO ()
 main = do
@@ -75,7 +77,21 @@ main = do
     backgroundSurface <- createImageSurface FormatRGB24 10000 10000
     renderWith backgroundSurface (drawBackground (tileMap ascii) painters)
 
-    timeoutAdd (updateGraphics canvas backgroundSurface (450, 000)) (1000 `div` graphicalFps)
+    timeoutAdd (updateGraphics canvas backgroundSurface (450, 0)) (1000 `div` graphicalFps)
+
+    onKeyPress window $ \Key { eventKeyName = key } -> case key of
+        "Escape" -> do
+            mainQuit
+            return True
+        k -> do 
+            --modifyMVar_ keyState $ \s -> return $ Set.insert k s
+            return True
+
+    onKeyRelease window $ \Key { eventKeyName = key } -> case key of
+        k -> do 
+            --modifyMVar_ keyState $ \s -> return $ Set.delete k s
+            return True
+
     onDestroy window mainQuit
     mainGUI
     
@@ -93,7 +109,7 @@ main = do
             setSourceRGB 0.15 0.20 0.05
             rectangle 0 0 10000 10000
             fill
-            mapM_ (paintTiles 42) ps
+            mapM_ (paintTiles 7) ps
             where
                 paintTiles s p = mapM_ (paintTile p) $ zip (randoms $ mkStdGen s) (tileCoordinates m)
                 paintTile p (s, (x, y)) = do

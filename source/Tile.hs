@@ -6,9 +6,11 @@ import Data.List
 -- The different sorts of tiles
 data Tile
     = OutdoorGrass
+    | OutdoorBush
     | OutdoorTree
     | OutdoorLake
     | OutdoorRoad
+    | OutdoorRock
     | BaseWall
     | BaseFloor
     | BaseGrid
@@ -52,12 +54,17 @@ tileMap :: [[Char]] -> TileMap
 tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (map tile $ concat $ transpose l)
     where
         tile 'b' = BaseBlock
-        tile '*' = OutdoorRoad
-        tile _ = OutdoorGrass
+        tile '*' = OutdoorGrass
+        tile ' ' = OutdoorBush
+        tile '`' = OutdoorRock
+        tile _ = OutdoorRock
 
 tileMapEmpty :: Int -> Int -> TileMap
 tileMapEmpty w h = TileMap (listArray ((0, 0), (w - 1, h - 1)) $ take (w * h) $ repeat Abyss)
 
 tileCoordinates :: TileMap -> [(Int, Int)]
 tileCoordinates (TileMap a) = indices a
+
+tileAt :: TileMap -> Int -> Int -> Tile
+tileAt m x y = tileGet m (x `div` tileWidth) (y `div` tileHeight)
 

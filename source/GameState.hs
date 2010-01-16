@@ -1,12 +1,15 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module GameState (GameState (..), Update (..), Position, AbstractEntity, Entity (..), Player (..)) where
 import Graphics.Rendering.Cairo (Render)
+import Tile
 
 data GameState = GameState {
     -- The players in the game
     statePlayers :: [Player],
     -- All the entities, including the players
-    stateEntities :: [AbstractEntity]
+    stateEntities :: [AbstractEntity],
+    -- The level map
+    stateMap :: TileMap
 }
 
 -- This represents the result of updating an entity
