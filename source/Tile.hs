@@ -16,12 +16,14 @@ data OutdoorTile
     | OutdoorLake
     | OutdoorRoad
     | OutdoorRock
+    deriving Eq
 
 data BaseTile
     = BaseWall
     | BaseFloor
     | BaseGrid
     | BaseBlock
+    deriving Eq
 
 data Tile
     = TileOutdoor OutdoorTile
@@ -37,6 +39,13 @@ tileSolid _ = False
 
 tileWidth = 32
 tileHeight = 32
+
+class TileLike a where
+    tileLike a Tile -> Bool
+
+instance TileLike OutdoorTile where
+    tileLike a (OutdoorTile t) = a == t
+    tileLike _ _ = False
 
 -- A painter is a function that may draw a tile based on the tile and surrounding tiles.
 -- The map is painted in scanlines (rows) from left to right and top to bottom, and the
