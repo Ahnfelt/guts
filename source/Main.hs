@@ -145,12 +145,13 @@ main = do
                     restore
 
 gameLoop gameState keyState = do
-    s <- atomically $ readTVar gameState
-    k <- atomically $ readTVar keyState
-    let d = 0.005
-    let us = map (\e -> entityUpdate e s d) ( stateEntities s )
-    let s' = s
-    atomically $ writeTVar gameState s'
+    atomically $ do
+        s <- readTVar gameState
+        k <- readTVar keyState
+        let d = 0.005
+        let us = map (\e -> entityUpdate e s d) ( stateEntities s )
+        let s' = s
+        writeTVar gameState s'
     threadDelay 1000
     gameLoop gameState keyState
 
