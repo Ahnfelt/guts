@@ -1,5 +1,6 @@
 module Tile (
-    Tile (..), tileSolid, tileWidth, tileHeight, 
+    Tile (..), OutdoorTile (..), BaseTile (..), 
+    tileSolid, tileWidth, tileHeight, 
     TilePainter, TileMap, tileMapEmpty, tileMap, 
     tileAt, tileGet, tileSet, 
     tileCoordinates, tileMapWidth, tileMapHeight
@@ -8,26 +9,30 @@ import Graphics.Rendering.Cairo (Render)
 import Data.Array.Diff
 import Data.List
 
--- The different sorts of tiles
-data Tile
+data OutdoorTile
     = OutdoorGrass
     | OutdoorBush
     | OutdoorTree
     | OutdoorLake
     | OutdoorRoad
     | OutdoorRock
-    | BaseWall
+
+data BaseTile
+    = BaseWall
     | BaseFloor
     | BaseGrid
     | BaseBlock
-    | Abyss
-    deriving Eq
+
+data Tile
+    = TileOutdoor OutdoorTile
+    | TileBase BaseTile Bool -- The flag is set if the tile is revealed
+    | TileAbyss
 
 -- Determines wether or not a tile is solid
 tileSolid :: Tile -> Bool
-tileSolid OutdoorTree = True
-tileSolid OutdoorLake = True
-tileSolid BaseWall = True
+tileSolid (TileOutdoor OutdoorTree) = True
+tileSolid (TileOutdoor OutdoorLake) = True
+tileSolid (TileBase BaseWall _) = True
 tileSolid _ = False
 
 tileWidth = 32
@@ -49,7 +54,7 @@ newtype TileMap = TileMap (DiffArray (Int, Int) Tile)
 
 tileGet :: TileMap -> Int -> Int -> Tile
 tileGet (TileMap a) x y = let ((x1, y1), (x2, y2)) = bounds a in
-    if x >= x1 && y >= y1 && x <= x2 && y <= y2 then a ! (x, y) else Abyss
+    if x >= x1 && y >= y1 && x <= x2 && y <= y2 then a ! (x, y) else TileAbyss
 
 tileSet :: TileMap -> Int -> Int -> Tile -> TileMap
 tileSet (TileMap a) x y t = let ((x1, y1), (x2, y2)) = bounds a in
@@ -58,14 +63,14 @@ tileSet (TileMap a) x y t = let ((x1, y1), (x2, y2)) = bounds a in
 tileMap :: [[Char]] -> TileMap
 tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (map tile $ concat $ transpose l)
     where
-        tile 'b' = BaseBlock
-        tile '*' = OutdoorGrass
-        tile ' ' = OutdoorBush
-        tile '`' = OutdoorRock
-        tile _ = OutdoorRock
+        tile 'b' = TileBase BaseBlock False
+        tile '*' = TileOutdoor OutdoorGrass
+        tile ' ' = TileOutdoor OutdoorBush
+        tile '`' = TileOutdoor OutdoorRock
+        tile _ = TileOutdoor OutdoorRock
 
 tileMapEmpty :: Int -> Int -> TileMap
-tileMapEmpty w h = TileMap (listArray ((0, 0), (w - 1, h - 1)) $ take (w * h) $ repeat Abyss)
+tileMapEmpty w h = TileMap (listArray ((0, 0), (w - 1, h - 1)) $ take (w * h) $ repeat TileAbyss)
 
 tileMapWidth :: TileMap -> Int
 tileMapWidth (TileMap a) = 1 + (fst $ snd $ bounds a)

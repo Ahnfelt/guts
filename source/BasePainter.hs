@@ -7,7 +7,7 @@ import Tile
 blockPainter :: Int -> IO TilePainter
 blockPainter s = do
     return $ \t ts1 ts2 x y s -> case t of
-        BaseBlock -> paintBlock t ts1 ts2 x y s
+        (TileBase BaseBlock _) -> paintBlock t ts1 ts2 x y s
         _ -> return ()
 
 paintBlock t (tn, ts, tw, te) ts2 x y s = do
@@ -27,7 +27,7 @@ paintBlock t (tn, ts, tw, te) ts2 x y s = do
     fill
     paintCracks (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight) s
     where
-        like BaseBlock = True
+        like (TileBase BaseBlock _) = True
         like _ = False
 
 paintCracks x y w h s = do

@@ -91,7 +91,7 @@ drawStraw z (r, x, y) = do
 flowerPainter :: Int -> IO TilePainter
 flowerPainter s = do
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorBush -> paintFlower x y s
+        TileOutdoor OutdoorBush -> paintFlower x y s
         _ -> return ()
     where
         paintFlower x y s = do
@@ -130,7 +130,7 @@ flowerPainter s = do
 cloverPainter :: Int -> IO TilePainter
 cloverPainter s = do
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorGrass -> paintClover x y s
+        TileOutdoor OutdoorGrass -> paintClover x y s
         _ -> return ()
     where
         paintClover x y s = do 
@@ -143,7 +143,7 @@ cloverPainter s = do
                 save
                 translate x' y'
                 rotate a
-                setSourceRGB 0 (0.2 + 0.2 * z) 0
+                setSourceRGB 0 (0.2 + 0.1 * z) 0
                 arc 0 0 (1 + 2 * z) 0 (2 * pi)
                 fill
                 setSourceRGBA 0 0 0 0.2
@@ -160,7 +160,7 @@ cloverPainter s = do
 rockPainter :: Int -> IO TilePainter
 rockPainter s = do
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorRock -> paintRock t ts1 ts2 x y s
+        TileOutdoor OutdoorRock -> paintRock t ts1 ts2 x y s
         _ -> return ()
 
 paintRock t ts1 ts2 x y s = do
