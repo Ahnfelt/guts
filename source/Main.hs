@@ -57,10 +57,9 @@ instance Entity Foo where
 
 painterGenerators = [
     OutdoorPainter.rockPainter,
-    OutdoorPainter.grassPainter (\(TileOutdoor OutdoorGrass) -> True; _ -> False) 0.5,
-    OutdoorPainter.cloverPainter,
+    OutdoorPainter.grassPainter (\t -> case t of TileOutdoor OutdoorGrass -> True; _ -> False) 0.5,
     BasePainter.blockPainter,
-    OutdoorPainter.grassPainter (\(TileOutdoor OutdoorBush) -> True; _ -> False) 0.8]
+    OutdoorPainter.grassPainter (\t -> case t of TileOutdoor OutdoorBush -> True; _ -> False) 0.8]
 
 main :: IO ()
 main = do
