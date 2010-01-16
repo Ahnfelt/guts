@@ -3,7 +3,7 @@ module GameState (
     GameState (..), 
     KeyState, KeyButton, newKeyState, keyPress, keyRelease, keyPressed,
     Position, 
-    Update (..), 
+    DeltaState (..), 
     AbstractEntity, 
     Entity (..), 
     ) where
@@ -27,17 +27,17 @@ keyRelease s (KeyState k) = KeyState $ Set.delete s k
 keyPressed s (KeyState k) = Set.member s k
 
 -- This represents the result of updating an entity
-data Update = Update { 
+data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
-    updateEntities :: [AbstractEntity],
+    deltaEntities :: [AbstractEntity],
     -- A permanent drawing to add to the background image
-    updateSplatter :: Render () 
+    deltaSplatter :: Render () 
 }
 
 -- The type class for players, monsters, items, particles, etc.
 class Entity a where
     -- The function that updates an entity (self, state, deltaTime)
-    entityUpdate :: a -> GameState -> Double -> Update
+    entityUpdate :: a -> GameState -> Double -> DeltaState
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position

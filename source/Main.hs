@@ -142,11 +142,14 @@ main = do
                     p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
                     restore
 
-gameLoop gameState keyState = forever $ atomically $ do
-    s <- readTVar gameState
-    k <- readTVar keyState
-    let d = 0.5
-    let us = map (\e -> entityUpdate e s d) ( stateEntities s )
-    let s' = s { stateEntities = concat $ map updateEntities us }
-    writeTVar gameState s'
-
+gameLoop gameState keyState = do
+    atomically $ do
+        s <- readTVar gameState
+        k <- readTVar keyState
+        let d = 0.5
+        let us = map (\e -> entityUpdate e s d) (stateEntities s)
+        let s' = s { stateEntities = concat $ map deltaEntities us }
+        length (stateEntities s') `seq` -- force evaluation
+            writeTVar gameState s'
+    gameLoop gameState keyState
+    
