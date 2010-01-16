@@ -4,6 +4,7 @@ import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
 import System.Random
 import Control.Concurrent
+import Control.Monad
 import Control.Concurrent.STM
 import Control.Concurrent.STM.TVar
 import Data.Array.Diff
@@ -130,9 +131,6 @@ main = do
             entityDraw e
             restore
         drawBackground m ps = do
-            setSourceRGB 0 0 0
-            rectangle 0 0 10000 10000
-            fill
             mapM_ (paintTiles 7) ps
             where
                 paintTiles s p = mapM_ (paintTile p) $ zip (randoms $ mkStdGen s) (tileCoordinates m)
@@ -144,14 +142,11 @@ main = do
                     p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
                     restore
 
-gameLoop gameState keyState = do
-    atomically $ do
-        s <- readTVar gameState
-        k <- readTVar keyState
-        let d = 0.005
-        let us = map (\e -> entityUpdate e s d) ( stateEntities s )
-        let s' = s
-        writeTVar gameState s'
-    threadDelay 1000
-    gameLoop gameState keyState
+gameLoop gameState keyState = forever $ atomically $ do
+    s <- readTVar gameState
+    k <- readTVar keyState
+    let d = 0.5
+    let us = map (\e -> entityUpdate e s d) ( stateEntities s )
+    let s' = s { stateEntities = concat $ map updateEntities us }
+    writeTVar gameState s'
 

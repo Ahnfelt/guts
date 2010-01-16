@@ -10,7 +10,7 @@ instance Entity Player where
 
     entityUpdate e s d =
         let (x, y) = playerPosition e
-            e' = e { playerPosition = (x + 1 * d, y) }
+            e' = e { playerPosition = (x + 1000 * d, y) }
         in Update { updateEntities = [entity e'], updateSplatter = return () }
     
     entityPosition e = Just (playerPosition e)
