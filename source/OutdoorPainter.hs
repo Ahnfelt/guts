@@ -90,9 +90,7 @@ drawStraw z (r, x, y) = do
 
 flowerPainter :: Int -> IO TilePainter
 flowerPainter s = do
-    return $ \t ts1 ts2 x y s -> case t of
-        TileOutdoor OutdoorBush -> paintFlower x y s
-        _ -> return ()
+    return $ \t ts1 ts2 x y s -> when (tileLike OutdoorBush t) $ paintFlower x y s
     where
         paintFlower x y s = do
             let r1:r2:r3:r4:r5:_ = map mkStdGen $ randoms $ mkStdGen s
@@ -129,9 +127,7 @@ flowerPainter s = do
 
 cloverPainter :: Int -> IO TilePainter
 cloverPainter s = do
-    return $ \t ts1 ts2 x y s -> case t of
-        TileOutdoor OutdoorGrass -> paintClover x y s
-        _ -> return ()
+    return $ \t ts1 ts2 x y s -> when (tileLike OutdoorBush t) $ paintClover x y s
     where
         paintClover x y s = do 
             let r1:r2:r3:r4:r5:_ = map mkStdGen $ randoms $ mkStdGen s
@@ -159,9 +155,7 @@ cloverPainter s = do
 
 rockPainter :: Int -> IO TilePainter
 rockPainter s = do
-    return $ \t ts1 ts2 x y s -> case t of
-        TileOutdoor OutdoorRock -> paintRock t ts1 ts2 x y s
-        _ -> return ()
+    return $ \t ts1 ts2 x y s -> when (tileLike OutdoorRock t) $ paintRock t ts1 ts2 x y s
 
 paintRock t ts1 ts2 x y s = do
     setSourceRGB 0.10 0.10 0.10

@@ -2,8 +2,12 @@ module Main where
 import Graphics.UI.Gtk hiding (fill, Solid)
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
-import Data.Array.Diff
 import System.Random
+import Control.Concurrent
+import Control.Concurrent.STM
+import Control.Concurrent.STM.TVar
+import Data.Array.Diff
+import qualified Data.Set as Set
 import GameState
 import PlayerEntity
 import Tile
@@ -50,16 +54,11 @@ ascii = [
 
 graphicalFps = 30
 
-data Foo = Foo
-
-instance Entity Foo where
-    entityOnTop _ = False
-
 painterGenerators = [
     OutdoorPainter.rockPainter,
-    OutdoorPainter.grassPainter (\t -> case t of TileOutdoor OutdoorGrass -> True; _ -> False) 0.5,
+    OutdoorPainter.grassPainter (tileLike OutdoorGrass) 0.5,
     BasePainter.blockPainter,
-    OutdoorPainter.grassPainter (\t -> case t of TileOutdoor OutdoorBush -> True; _ -> False) 0.8]
+    OutdoorPainter.grassPainter (tileLike OutdoorBush) 0.8]
 
 main :: IO ()
 main = do
@@ -82,36 +81,56 @@ main = do
     backgroundSurface <- createImageSurface FormatRGB24 (tileMapWidth world * tileWidth) (tileMapHeight world * tileHeight)
     renderWith backgroundSurface (drawBackground world painters)
 
-    timeoutAdd (updateGraphics canvas backgroundSurface (0, 0)) (1000 `div` graphicalFps)
+    keyState <- newTVarIO newKeyState
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
         "Escape" -> do
             mainQuit
             return True
         k -> do 
-            --modifyMVar_ keyState $ \s -> return $ Set.insert k s
+            modifyTVar (keyPress k) keyState
             return True
 
     onKeyRelease window $ \Key { eventKeyName = key } -> case key of
         k -> do 
-            --modifyMVar_ keyState $ \s -> return $ Set.delete k s
+            modifyTVar (keyRelease k) keyState
             return True
 
     onDestroy window mainQuit
+
+    let p1 = Player { playerPosition = (200, 200) }
+    gameState <- newTVarIO (GameState { stateEntities = [entity p1], stateMap = world })
+    threadId <- forkIO (gameLoop gameState keyState)
+    timeoutAdd (updateGraphics gameState canvas backgroundSurface) (1000 `div` graphicalFps)
+
     mainGUI
+
+    killThread threadId
     
     where
-        updateGraphics canvas backgroundSurface (x, y) = do
+        modifyTVar f v = atomically $ do
+            s <- readTVar v
+            writeTVar v (f s)
+        updateGraphics gameState canvas backgroundSurface = do
+            s <- atomically $ readTVar gameState
+            let (x, y) = (0, 0)
             (w, h) <- widgetGetSize canvas
             drawable <- widgetGetDrawWindow canvas
             drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
             renderWithDrawable drawable $ do
                 setSourceSurface backgroundSurface (-x) (-y)
                 paint
+                mapM_ drawEntity [(e, x, y) | e <- stateEntities s, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
+                mapM_ drawEntity [(e, x, y) | e <- stateEntities s, Just (x, y) <- [entityPosition e], entityOnTop e]
             drawWindowEndPaint drawable
             return True
+        drawEntity (e, x, y) = do
+            save
+            translate x y
+            entityDraw e
+            restore
         drawBackground m ps = do
-            setSourceRGB 0.15 0.20 0.05
+            setSourceRGB 0 0 0
             rectangle 0 0 10000 10000
             fill
             mapM_ (paintTiles 7) ps
@@ -124,4 +143,14 @@ main = do
                     save
                     p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
                     restore
+
+gameLoop gameState keyState = do
+    s <- atomically $ readTVar gameState
+    k <- atomically $ readTVar keyState
+    let d = 0.005
+    let us = map (\e -> entityUpdate e s d) ( stateEntities s )
+    let s' = s
+    atomically $ writeTVar gameState s'
+    threadDelay 1000
+    gameLoop gameState keyState
 

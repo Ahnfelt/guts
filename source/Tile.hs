@@ -1,6 +1,6 @@
 module Tile (
     Tile (..), OutdoorTile (..), BaseTile (..), 
-    tileSolid, tileWidth, tileHeight, 
+    TileLike (..), tileSolid, tileWidth, tileHeight, 
     TilePainter, TileMap, tileMapEmpty, tileMap, 
     tileAt, tileGet, tileSet, 
     tileCoordinates, tileMapWidth, tileMapHeight
@@ -8,6 +8,9 @@ module Tile (
 import Graphics.Rendering.Cairo (Render)
 import Data.Array.Diff
 import Data.List
+
+tileWidth = 32
+tileHeight = 32
 
 data OutdoorTile
     = OutdoorGrass
@@ -32,19 +35,27 @@ data Tile
 
 -- Determines wether or not a tile is solid
 tileSolid :: Tile -> Bool
-tileSolid (TileOutdoor OutdoorTree) = True
-tileSolid (TileOutdoor OutdoorLake) = True
-tileSolid (TileBase BaseWall _) = True
-tileSolid _ = False
+tileSolid t = tileLike [OutdoorTree, OutdoorLake] t || tileLike [BaseWall] t
 
-tileWidth = 32
-tileHeight = 32
-
+-- Determines whether or not a tile is the same as another modulo revealing
 class TileLike a where
-    tileLike a Tile -> Bool
+    tileLike :: a -> Tile -> Bool
+
+instance (TileLike a) => TileLike [a] where
+    tileLike l t = any (\a -> tileLike a t) l
 
 instance TileLike OutdoorTile where
-    tileLike a (OutdoorTile t) = a == t
+    tileLike a (TileOutdoor t) = a == t
+    tileLike _ _ = False
+
+instance TileLike BaseTile where
+    tileLike a (TileBase t _) = a == t
+    tileLike _ _ = False
+
+instance TileLike Tile where
+    tileLike t' (TileBase t _) = tileLike t t'
+    tileLike t' (TileOutdoor t) = tileLike t t'
+    tileLike TileAbyss TileAbyss = True
     tileLike _ _ = False
 
 -- A painter is a function that may draw a tile based on the tile and surrounding tiles.
