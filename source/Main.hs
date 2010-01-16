@@ -39,8 +39,13 @@ ascii = [
     "*                        *    *         *`*    `     *     *",
     "***         *`                         **`*                *",
     "****              **                   *`*                **",
-    "*******    *     *****      *     *    *`*      *       ****",
-    "****************************************`*******************"
+    "*******    *     *****      *     *    ``*      *       ****",
+    "****************************************`*******************",
+    "****************************************`*******************",
+    "****************************************``******************",
+    "****************************************``******************",
+    "****************************************`*******************",
+    "***************************************``*******************"
     ]
 
 graphicalFps = 30
@@ -74,8 +79,9 @@ main = do
 
     painters <- mapM (\f -> f $ head $ randoms $ mkStdGen 42) painterGenerators
 
-    backgroundSurface <- createImageSurface FormatRGB24 10000 10000
-    renderWith backgroundSurface (drawBackground (tileMap ascii) painters)
+    let world = tileMap ascii
+    backgroundSurface <- createImageSurface FormatRGB24 (tileMapWidth world * tileWidth) (tileMapHeight world * tileHeight)
+    renderWith backgroundSurface (drawBackground world painters)
 
     timeoutAdd (updateGraphics canvas backgroundSurface (450, 0)) (1000 `div` graphicalFps)
 

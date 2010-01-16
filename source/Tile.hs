@@ -1,4 +1,9 @@
-module Tile (Tile (..), tileSolid, tileWidth, tileHeight, TilePainter, TileMap, tileGet, tileSet, tileMapEmpty, tileMap, tileCoordinates) where
+module Tile (
+    Tile (..), tileSolid, tileWidth, tileHeight, 
+    TilePainter, TileMap, tileMapEmpty, tileMap, 
+    tileAt, tileGet, tileSet, 
+    tileCoordinates, tileMapWidth, tileMapHeight
+    ) where
 import Graphics.Rendering.Cairo (Render)
 import Data.Array.Diff
 import Data.List
@@ -61,6 +66,11 @@ tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (m
 
 tileMapEmpty :: Int -> Int -> TileMap
 tileMapEmpty w h = TileMap (listArray ((0, 0), (w - 1, h - 1)) $ take (w * h) $ repeat Abyss)
+
+tileMapWidth :: TileMap -> Int
+tileMapWidth (TileMap a) = 1 + (fst $ snd $ bounds a)
+tileMapHeight :: TileMap -> Int
+tileMapHeight (TileMap a) = 1 + (snd $ snd $ bounds a)
 
 tileCoordinates :: TileMap -> [(Int, Int)]
 tileCoordinates (TileMap a) = indices a
