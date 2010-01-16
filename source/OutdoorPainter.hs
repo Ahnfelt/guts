@@ -91,13 +91,12 @@ drawStraw z (r, x, y) = do
 flowerPainter :: Int -> IO TilePainter
 flowerPainter s = do
     return $ \t ts1 ts2 x y s -> case t of
-        OutdoorBush -> paintFlowers x y s
+        OutdoorBush -> paintFlower x y s
         _ -> return ()
     where
-        paintFlowers x y s = mapM_ (paintFlower x y) (take 5 $ randoms $ mkStdGen s)
         paintFlower x y s = do
             let r1:r2:r3:r4:r5:_ = map mkStdGen $ randoms $ mkStdGen s
-            when ((fst (random r1) :: Double) < 0.10) $ do
+            when ((fst (random r1) :: Double) < 0.50) $ do
                 let x' = fromIntegral $ fst $ randomR (x, x + tileWidth - 1) r2
                 let y' = fromIntegral $ fst $ randomR (y, y + tileHeight - 1) r3
                 let a = fst $ randomR (0, 2 * pi) r4
