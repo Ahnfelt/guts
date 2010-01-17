@@ -3,6 +3,7 @@ import Graphics.UI.Gtk hiding (fill, Solid)
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
 import System.Random
+import System.Time
 import Control.Monad
 import Data.Array.Diff
 import Data.IORef
@@ -104,18 +105,21 @@ main = do
     let p1 = Player { playerPosition = (200, 200) }
     let s = GameState { stateEntities = [entity p1], stateMap = world }
 
-    mainLoop s canvas backgroundSurface quitState
+    newTime <- getClockTime
+    mainLoop s canvas backgroundSurface newTime quitState
 
     where
-        mainLoop s canvas surface quitState = do
+        mainLoop s canvas surface oldTime quitState = do
             handleEvents
             q <- readIORef quitState
             when (True || not q) $ do
-                let d = 0.05
+                newTime <- getClockTime
+                let d = diffClockTime oldTime newTime
+                print d
                 let us = map (\e -> entityUpdate e s d) (stateEntities s)
                 let s' = s { stateEntities = concat $ map deltaEntities us }
                 updateGraphics s canvas surface
-                mainLoop s' canvas surface quitState
+                mainLoop s' canvas surface newTime quitState
         handleEvents = do
             i <- eventsPending
             if i == 0
@@ -123,6 +127,11 @@ main = do
                 else do
                     mainIteration
                     handleEvents
+        diffClockTime :: ClockTime -> ClockTime -> Double
+        diffClockTime (TOD s1 p1) (TOD s2 p2) =
+            let ds = fromIntegral (s2 - s1)
+                dp = fromIntegral (p2 - p1)
+            in ds + (dp * 10**(-12))
         updateGraphics gameState canvas backgroundSurface = do
             let (x, y) = (0, 0)
             (w, h) <- widgetGetSize canvas
@@ -151,4 +160,17 @@ main = do
                     save
                     p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
                     restore
+
+{-
+gameLoop gameState keyState = do
+    atomically $ do
+        s <- readTVar gameState
+        k <- readTVar keyState
+        let d = 0.5
+        let us = map (\e -> entityUpdate e s d) (stateEntities s)
+        let s' = s { stateEntities = concat $ map deltaEntities us }
+        length (stateEntities s') `seq` -- force evaluation
+            writeTVar gameState s'
+    gameLoop gameState keyState
+-}
 

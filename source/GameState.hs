@@ -47,7 +47,7 @@ class Entity a where
     entityOnTop :: a -> Bool
     -- Converts any entity to an abstract entity (for storage in lists etc.)
     entity :: a -> AbstractEntity
-    entity = AbstractEntity
+    entity e = AbstractEntity e
 
 -- This is to be able to store different kinds of entities in lists.
 -- When you make functions to work at entities, please use 
