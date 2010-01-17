@@ -3,11 +3,9 @@ import Graphics.UI.Gtk hiding (fill, Solid)
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
 import System.Random
-import Control.Concurrent
 import Control.Monad
-import Control.Concurrent.STM
-import Control.Concurrent.STM.TVar
 import Data.Array.Diff
+import Data.IORef
 import qualified Data.Set as Set
 import GameState
 import PlayerEntity
@@ -82,6 +80,7 @@ main = do
     backgroundSurface <- createImageSurface FormatRGB24 (tileMapWidth world * tileWidth) (tileMapHeight world * tileHeight)
     renderWith backgroundSurface (drawBackground world painters)
 
+    {-
     keyState <- newTVarIO newKeyState
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
@@ -96,24 +95,35 @@ main = do
         k -> do 
             modifyTVar (keyRelease k) keyState
             return True
+    -}
 
-    onDestroy window mainQuit
+    quitState <- newIORef False
+
+    onDestroy window $ writeIORef quitState True
 
     let p1 = Player { playerPosition = (200, 200) }
-    gameState <- newTVarIO (GameState { stateEntities = [entity p1], stateMap = world })
-    threadId <- forkIO (gameLoop gameState keyState)
-    timeoutAdd (updateGraphics gameState canvas backgroundSurface) (1000 `div` graphicalFps)
+    let s = GameState { stateEntities = [entity p1], stateMap = world }
 
-    mainGUI
+    mainLoop s canvas backgroundSurface quitState
 
-    killThread threadId
-    
     where
-        modifyTVar f v = atomically $ do
-            s <- readTVar v
-            writeTVar v (f s)
+        mainLoop s canvas surface quitState = do
+            handleEvents
+            q <- readIORef quitState
+            when (True || not q) $ do
+                let d = 0.05
+                let us = map (\e -> entityUpdate e s d) (stateEntities s)
+                let s' = s { stateEntities = concat $ map deltaEntities us }
+                updateGraphics s canvas surface
+                mainLoop s' canvas surface quitState
+        handleEvents = do
+            i <- eventsPending
+            if i == 0
+                then return ()
+                else do
+                    mainIteration
+                    handleEvents
         updateGraphics gameState canvas backgroundSurface = do
-            s <- atomically $ readTVar gameState
             let (x, y) = (0, 0)
             (w, h) <- widgetGetSize canvas
             drawable <- widgetGetDrawWindow canvas
@@ -121,8 +131,8 @@ main = do
             renderWithDrawable drawable $ do
                 setSourceSurface backgroundSurface (-x) (-y)
                 paint
-                mapM_ drawEntity [(e, x, y) | e <- stateEntities s, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
-                mapM_ drawEntity [(e, x, y) | e <- stateEntities s, Just (x, y) <- [entityPosition e], entityOnTop e]
+                mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
+                mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
             drawWindowEndPaint drawable
             return True
         drawEntity (e, x, y) = do
@@ -142,14 +152,3 @@ main = do
                     p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
                     restore
 
-gameLoop gameState keyState = do
-    atomically $ do
-        s <- readTVar gameState
-        k <- readTVar keyState
-        let d = 0.5
-        let us = map (\e -> entityUpdate e s d) (stateEntities s)
-        let s' = s { stateEntities = concat $ map deltaEntities us }
-        length (stateEntities s') `seq` -- force evaluation
-            writeTVar gameState s'
-    gameLoop gameState keyState
-    

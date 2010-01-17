@@ -10,7 +10,7 @@ instance Entity Player where
 
     entityUpdate e s d =
         let (x, y) = playerPosition e
-            e' = e { playerPosition = (x + 0.001 * d, y) }
+            e' = e { playerPosition = (x + 100 * d, y) }
         in DeltaState { deltaEntities = [entity e'], deltaSplatter = return () }
     
     entityPosition e = Just (playerPosition e)
