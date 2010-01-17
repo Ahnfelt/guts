@@ -79,26 +79,23 @@ main = do
 
     let world = tileMap ascii
     backgroundSurface <- createImageSurface FormatRGB24 (tileMapWidth world * tileWidth) (tileMapHeight world * tileHeight)
-    renderWith backgroundSurface (drawBackground world painters)
+    renderWith backgroundSurface (drawBackgroundTiles world painters)
 
-    {-
-    keyState <- newTVarIO newKeyState
+    quitState <- newIORef False
+    keyState <- newIORef newKeyState
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
         "Escape" -> do
-            mainQuit
+            writeIORef quitState True
             return True
         k -> do 
-            modifyTVar (keyPress k) keyState
+            modifyIORef keyState (keyPress k)
             return True
 
     onKeyRelease window $ \Key { eventKeyName = key } -> case key of
         k -> do 
-            modifyTVar (keyRelease k) keyState
+            modifyIORef keyState (keyRelease k)
             return True
-    -}
-
-    quitState <- newIORef False
 
     onDestroy window $ writeIORef quitState True
 
@@ -106,71 +103,67 @@ main = do
     let s = GameState { stateEntities = [entity p1], stateMap = world }
 
     newTime <- getClockTime
-    mainLoop s canvas backgroundSurface newTime quitState
+    mainLoop s canvas backgroundSurface newTime quitState keyState
 
-    where
-        mainLoop s canvas surface oldTime quitState = do
-            handleEvents
-            q <- readIORef quitState
-            when (True || not q) $ do
-                newTime <- getClockTime
-                let d = diffClockTime oldTime newTime
-                print d
-                let us = map (\e -> entityUpdate e s d) (stateEntities s)
-                let s' = s { stateEntities = concat $ map deltaEntities us }
-                updateGraphics s canvas surface
-                mainLoop s' canvas surface newTime quitState
-        handleEvents = do
-            i <- eventsPending
-            if i == 0
-                then return ()
-                else do
-                    mainIteration
-                    handleEvents
-        diffClockTime :: ClockTime -> ClockTime -> Double
-        diffClockTime (TOD s1 p1) (TOD s2 p2) =
-            let ds = fromIntegral (s2 - s1)
-                dp = fromIntegral (p2 - p1)
-            in ds + (dp * 10**(-12))
-        updateGraphics gameState canvas backgroundSurface = do
-            let (x, y) = (0, 0)
-            (w, h) <- widgetGetSize canvas
-            drawable <- widgetGetDrawWindow canvas
-            drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
-            renderWithDrawable drawable $ do
-                setSourceSurface backgroundSurface (-x) (-y)
-                paint
-                mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
-                mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
-            drawWindowEndPaint drawable
-            return True
-        drawEntity (e, x, y) = do
-            save
-            translate x y
-            entityDraw e
-            restore
-        drawBackground m ps = do
-            mapM_ (paintTiles 7) ps
-            where
-                paintTiles s p = mapM_ (paintTile p) $ zip (randoms $ mkStdGen s) (tileCoordinates m)
-                paintTile p (s, (x, y)) = do
-                    let t = tileGet m x y
-                    let ts1 = (tileGet m (x) (y - 1), tileGet m (x) (y + 1), tileGet m (x - 1) (y), tileGet m (x + 1) (y))
-                    let ts2 = (tileGet m (x - 1) (y - 1), tileGet m (x + 1) (y - 1), tileGet m (x - 1) (y + 1), tileGet m (x + 1) (y + 1))
-                    save
-                    p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
-                    restore
-
-{-
-gameLoop gameState keyState = do
-    atomically $ do
-        s <- readTVar gameState
-        k <- readTVar keyState
-        let d = 0.5
+mainLoop :: (WidgetClass widget) => GameState -> widget -> Surface -> ClockTime -> IORef Bool -> IORef KeyState -> IO ()
+mainLoop s canvas surface oldTime quitState keyState = do
+    handleEvents
+    k <- readIORef keyState
+    q <- readIORef quitState
+    when (not q) $ do
+        newTime <- getClockTime
+        let d = diffClockTime oldTime newTime
         let us = map (\e -> entityUpdate e s d) (stateEntities s)
         let s' = s { stateEntities = concat $ map deltaEntities us }
-        length (stateEntities s') `seq` -- force evaluation
-            writeTVar gameState s'
-    gameLoop gameState keyState
--}
+        updateGraphics s' canvas surface
+        mainLoop s' canvas surface newTime quitState keyState
+
+handleEvents :: IO ()
+handleEvents = do
+    i <- eventsPending
+    if i == 0
+        then return ()
+        else do
+            mainIteration
+            handleEvents
+
+diffClockTime :: ClockTime -> ClockTime -> Double
+diffClockTime (TOD s1 p1) (TOD s2 p2) =
+    let ds = fromIntegral (s2 - s1)
+        dp = fromIntegral (p2 - p1)
+    in ds + (dp * 1e-12)
+
+updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> IO Bool
+updateGraphics gameState canvas backgroundSurface = do
+    let (x, y) = (0, 0)
+    (w, h) <- widgetGetSize canvas
+    drawable <- widgetGetDrawWindow canvas
+    drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
+    renderWithDrawable drawable $ do
+        setSourceSurface backgroundSurface (-x) (-y)
+        paint
+        mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
+        mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
+    drawWindowEndPaint drawable
+    return True
+
+drawEntity :: (Entity t) => (t, Double, Double) -> Render ()
+drawEntity (e, x, y) = do
+    save
+    translate x y
+    entityDraw e
+    restore
+
+drawBackgroundTiles :: TileMap -> [TilePainter] -> Render ()
+drawBackgroundTiles m ps = do
+    mapM_ (paintTiles 7) ps
+    where
+        paintTiles s p = mapM_ (paintTile p) $ zip (randoms $ mkStdGen s) (tileCoordinates m)
+        paintTile p (s, (x, y)) = do
+            let t = tileGet m x y
+            let ts1 = (tileGet m (x) (y - 1), tileGet m (x) (y + 1), tileGet m (x - 1) (y), tileGet m (x + 1) (y))
+            let ts2 = (tileGet m (x - 1) (y - 1), tileGet m (x + 1) (y - 1), tileGet m (x - 1) (y + 1), tileGet m (x + 1) (y + 1))
+            save
+            p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
+            restore
 
