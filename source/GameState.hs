@@ -26,7 +26,7 @@ keyPress s (KeyState k) = KeyState $ Set.insert s k
 keyRelease s (KeyState k) = KeyState $ Set.delete s k
 keyPressed s (KeyState k) = Set.member s k
 
--- This represents the result of updating an entity
+-- This represents the result of updating an entity (changes to the game state)
 data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
     deltaEntities :: [AbstractEntity],
@@ -45,6 +45,8 @@ class Entity a where
     entityDraw :: a -> Render ()
     -- Should this be drawn on top of items and such?
     entityOnTop :: a -> Bool
+    -- Can this entity handle this event?
+    entityRespondsTo :: Message -> Bool
     -- Converts any entity to an abstract entity (for storage in lists etc.)
     entity :: a -> AbstractEntity
     entity e = AbstractEntity e

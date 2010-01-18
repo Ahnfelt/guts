@@ -27,8 +27,7 @@ paintBlock t (tn, ts, tw, te) ts2 x y s = do
     fill
     paintCracks (fromIntegral x) (fromIntegral y) (fromIntegral tileWidth) (fromIntegral tileHeight) s
     where
-        like (TileBase BaseBlock _) = True
-        like _ = False
+        like t = tileLike BaseBlock t
 
 paintCracks x y w h s = do
     let r1:r2:r3:r4:r5:r6:_ = randoms $ mkStdGen s
