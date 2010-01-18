@@ -115,7 +115,7 @@ main = do
             when (True || not q) $ do
                 newTime <- getClockTime
                 let d = diffClockTime oldTime newTime
-                print d
+                print (round (1.0 / d))
                 let us = map (\e -> entityUpdate e s d) (stateEntities s)
                 let s' = s { stateEntities = concat $ map deltaEntities us }
                 updateGraphics s canvas surface
