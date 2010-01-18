@@ -26,7 +26,7 @@ keyPress s (KeyState k) = KeyState $ Set.insert s k
 keyRelease s (KeyState k) = KeyState $ Set.delete s k
 keyPressed s (KeyState k) = Set.member s k
 
--- This represents the result of updating an entity
+-- This represents the result of updating an entity (changes to the game state)
 data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
     deltaEntities :: [AbstractEntity],
