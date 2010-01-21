@@ -13,8 +13,9 @@ import qualified OutdoorPainter
 import qualified BasePainter
 import GameState
 import KeyState
-import PlayerEntity
+import Message
 import Tile
+import PlayerEntity
 
 ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
 
@@ -70,7 +71,7 @@ main = do
     mainLoop canvas backgroundSurface quitState keyState newTime s
 
 mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
-mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
+mainLoop canvas surface quitState keyState t s = loop t s initialMessages 1000 where
     loop t s m i = do
         handleEvents
         k <- readIORef keyState
@@ -79,15 +80,17 @@ mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
             let s' = s { stateKeys = k }
             t' <- getClockTime
             let d = diffClockTime t t'
-            let us = map (\e -> entityUpdate e (messages e m) s' d) (stateEntities s')
-            let es' = concat $ map deltaEntities us 
+            let us = map (\e -> (e, entityUpdate e s' (messages e m) d)) (stateEntities s')
+            let es' = concat $ map deltaEntities (map snd us)
             let es'' = map (\(i, e) -> entityChangeId e (entityIdDefault (entityId e) i)) (zip [i..] es')
             let s'' = s' { stateEntities = es'' }
-            let m' = messageMap (concat $ map deltaMessages us)
+            let m' = messageMap (concat $ map deltaMessages (map snd us))
+            renderWith surface (drawSplatter (map (\(e, d) -> (e, deltaSplatter d)) us))
             updateGraphics s'' canvas surface
             loop t' s'' m' (i + fromIntegral (length es'))
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
+    initialMessages = (Map.singleton (entityIdDefault entityIdNew 1) [MessageCollide undefined])
 
 handleEvents :: IO ()
 handleEvents = do
@@ -124,6 +127,17 @@ drawEntity (e, x, y) = do
     translate x y
     entityDraw e
     restore
+
+drawSplatter :: (Entity t) => [(t, Render ())] -> Render ()
+drawSplatter ps = do
+    forM_ ps $ \(e, r) -> do
+        case entityPosition e of
+            Just (x, y) -> do
+                save
+                translate x y
+                r
+                restore
+            Nothing -> return ()
 
 drawBackgroundTiles :: TileMap -> [TilePainter] -> Render ()
 drawBackgroundTiles m ps = do

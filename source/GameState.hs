@@ -35,7 +35,7 @@ data DeltaState = DeltaState {
 -- The type class for players, monsters, items, particles, etc.
 class Entity a where
     -- The function that updates an entity (self, state, deltaTime)
-    entityUpdate :: a -> [Message] -> GameState -> Double -> DeltaState
+    entityUpdate :: a -> GameState -> [Message] -> Double -> DeltaState
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position
