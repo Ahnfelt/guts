@@ -8,51 +8,15 @@ import Control.Monad
 import Data.Array.Diff
 import Data.IORef
 import qualified Data.Set as Set
-import GameState
-import PlayerEntity
-import Tile
+import qualified Data.Map as Map
 import qualified OutdoorPainter
 import qualified BasePainter
+import GameState
+import KeyState
+import PlayerEntity
+import Tile
 
-ascii = [
-    "*****************`   ``*************************************",
-    "*****************`   `****   *    ***       **       *******",
-    "*****************`````**                                ****",
-    "******* **********```***                    *             **",
-    "***********************       *                    *      **",
-    "*************** *****               *                     **",
-    "*********************    *          *    *          *      *",
-    "*********************                          *           *",
-    "***** *****    ****                                        *",
-    "****   ***              **                       *        **",
-    "***** ****                   *        *              *    **",
-    "** *******     *                                         ***",
-    "*   ******   *             `              *    *        ****",
-    "*     **                    *            *`*       *    ****",
-    "**                   *                   **              ***",
-    "***              *                 *****              ******",
-    "**        *                       **   *      *    ***``````",
-    "*      *                *`*       *    **        **````*****",
-    "*       *         *    *```*      **   **      **```**    **",
-    "*             *         ***       *  ***      *`***      ***",
-    "*                   *             ****     ***`*         ***",
-    "**                                       **`**            **",
-    "**     *                    *           **`*               *",
-    "*        *      *         **             *`        *       *",
-    "*       `      *                  *     *`*                *",
-    "*                        *    *         *`*    `     *     *",
-    "***         *`                         **`*                *",
-    "****              **                   *`*                **",
-    "*******    *     *****      *     *    ``*      *       ****",
-    "****************************************`*******************",
-    "****************************************`*******************",
-    "****************************************``******************",
-    "****************************************``******************",
-    "****************************************`*******************",
-    "***************************************``*******************"
-    ]
-
-graphicalFps = 30
+ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
 
 painterGenerators = [
     OutdoorPainter.rockPainter,
@@ -99,24 +63,31 @@ main = do
 
     onDestroy window $ writeIORef quitState True
 
-    let p1 = Player { playerPosition = (200, 200) }
-    let s = GameState { stateEntities = [entity p1], stateMap = world }
+    let p1 = Player { playerPosition = (200, 200), playerId = entityIdDefault entityIdNew 1 }
+    let s = GameState { stateEntities = [entity p1], stateMap = world, stateKeys = newKeyState }
 
     newTime <- getClockTime
-    mainLoop s canvas backgroundSurface newTime quitState keyState
+    mainLoop canvas backgroundSurface quitState keyState newTime s
 
-mainLoop :: (WidgetClass widget) => GameState -> widget -> Surface -> ClockTime -> IORef Bool -> IORef KeyState -> IO ()
-mainLoop s canvas surface oldTime quitState keyState = do
-    handleEvents
-    k <- readIORef keyState
-    q <- readIORef quitState
-    when (not q) $ do
-        newTime <- getClockTime
-        let d = diffClockTime oldTime newTime
-        let us = map (\e -> entityUpdate e s d) (stateEntities s)
-        let s' = s { stateEntities = concat $ map deltaEntities us }
-        updateGraphics s' canvas surface
-        mainLoop s' canvas surface newTime quitState keyState
+mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
+mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
+    loop t s m i = do
+        handleEvents
+        k <- readIORef keyState
+        q <- readIORef quitState
+        when (not q) $ do
+            let s' = s { stateKeys = k }
+            t' <- getClockTime
+            let d = diffClockTime t t'
+            let us = map (\e -> entityUpdate e (messages e m) s' d) (stateEntities s')
+            let es' = concat $ map deltaEntities us 
+            let es'' = map (\(i, e) -> entityChangeId e (entityIdDefault (entityId e) i)) (zip [i..] es')
+            let s'' = s' { stateEntities = es'' }
+            let m' = messageMap (concat $ map deltaMessages us)
+            updateGraphics s'' canvas surface
+            loop t' s'' m' (i + fromIntegral (length es'))
+    messages e ms = Map.findWithDefault [] (entityId e) ms
+    messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
 
 handleEvents :: IO ()
 handleEvents = do

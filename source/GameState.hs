@@ -1,43 +1,41 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module GameState (
     GameState (..), 
-    KeyState, KeyButton, newKeyState, keyPress, keyRelease, keyPressed,
-    Position, 
     DeltaState (..), 
     AbstractEntity, 
-    Entity (..), 
+    Entity (..),
+    EntityId, entityIdNew, entityIdDefault,
+    Message
     ) where
 import Graphics.Rendering.Cairo (Render)
-import qualified Data.Set as Set
+import KeyState
+import Mechanics
 import Tile
+import Message
 
 data GameState = GameState {
     -- All the entities, including the players
     stateEntities :: [AbstractEntity],
     -- The level map
-    stateMap :: TileMap
+    stateMap :: TileMap,
+    -- The input buttons pressed
+    stateKeys :: KeyState
 }
-
-data KeyState = KeyState (Set.Set KeyButton)
-type KeyButton = String
-
-newKeyState = KeyState $ Set.empty
-keyPress s (KeyState k) = KeyState $ Set.insert s k
-keyRelease s (KeyState k) = KeyState $ Set.delete s k
-keyPressed s (KeyState k) = Set.member s k
 
 -- This represents the result of updating an entity (changes to the game state)
 data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
     deltaEntities :: [AbstractEntity],
+    -- Messages to send to the entities identified by the IDs
+    deltaMessages :: [(EntityId, Message)],
     -- A permanent drawing to add to the background image
-    deltaSplatter :: Render () 
+    deltaSplatter :: Render ()
 }
 
 -- The type class for players, monsters, items, particles, etc.
 class Entity a where
     -- The function that updates an entity (self, state, deltaTime)
-    entityUpdate :: a -> GameState -> Double -> DeltaState
+    entityUpdate :: a -> [Message] -> GameState -> Double -> DeltaState
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position
@@ -45,6 +43,10 @@ class Entity a where
     entityDraw :: a -> Render ()
     -- Should this be drawn on top of items and such?
     entityOnTop :: a -> Bool
+    -- The identity of the entity
+    entityId :: a -> EntityId
+    -- The identity of the entity
+    entityChangeId :: a -> EntityId -> AbstractEntity
     -- Converts any entity to an abstract entity (for storage in lists etc.)
     entity :: a -> AbstractEntity
     entity e = AbstractEntity e
@@ -61,9 +63,15 @@ instance Entity AbstractEntity where
     entityPosition (AbstractEntity e) = entityPosition e
     entityDraw (AbstractEntity e) = entityDraw e
     entityOnTop (AbstractEntity e) = entityOnTop e
-    entity = id -- Avoids needless boxing
+    entityId (AbstractEntity e) = entityId e
+    entityChangeId (AbstractEntity e) = entityChangeId e
+    entity e = e -- Avoids needless boxing
     
--- A position (x, y)
-type Position = (Double, Double)
+newtype EntityId = EntityId Integer deriving (Eq, Ord)
 
+entityIdNew = EntityId (-1)
+entityIdDefault (EntityId (-1)) i = (EntityId i)
+entityIdDefault i _ = i
+
+type Message = AbstractMessage AbstractEntity
 

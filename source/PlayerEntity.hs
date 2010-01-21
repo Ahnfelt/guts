@@ -1,17 +1,31 @@
 module PlayerEntity where
 import Graphics.Rendering.Cairo
 import GameState
+import KeyState
+import Mechanics
 
 data Player = Player { 
-    playerPosition :: Position 
+    playerPosition :: Position,
+    playerId :: EntityId
 }
 
 instance Entity Player where
 
-    entityUpdate e s d =
-        let (x, y) = playerPosition e
-            e' = e { playerPosition = (x + 80 * d, y+ 40 * d) }
-        in DeltaState { deltaEntities = [entity e'], deltaSplatter = return () }
+    entityUpdate e m s d =
+        let k = stateKeys s in
+        let (x, y) = playerPosition e in
+        let (x', y') = (
+                (if keyPressed "Left" k then x - 80 * d
+                else if keyPressed "Right" k then x + 80 * d
+                else x),
+                (if keyPressed "Up" k then y - 80 * d
+                else if keyPressed "Down" k then y + 80 * d
+                else y))
+        in DeltaState { 
+            deltaEntities = [entity (e { playerPosition = (x', y') })], 
+            deltaMessages = [],
+            deltaSplatter = return ()
+        }
     
     entityPosition e = Just (playerPosition e)
 
@@ -21,4 +35,8 @@ instance Entity Player where
         fill
 
     entityOnTop _ = True
+
+    entityId e = playerId e
+
+    entityChangeId e i = entity (e { playerId = i })
 
