@@ -8,6 +8,7 @@ import Message
 
 data Player = Player { 
     playerPosition :: Position,
+    playerKeys :: (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton),
     playerId :: EntityId
 }
 
@@ -20,13 +21,14 @@ instance Entity Player where
                     arc 0 0 30 0 (2 * pi)
                     fill in
         let k = stateKeys s in
+        let (keyUp, keyDown, keyLeft, keyRight, keyPrimary, keySecondary) = playerKeys e in
         let (x, y) = playerPosition e in
         let (x', y') = (
-                (if keyPressed "Left" k then x - 80 * d
-                else if keyPressed "Right" k then x + 80 * d
+                (if keyPressed keyLeft k then x - 80 * d
+                else if keyPressed keyRight k then x + 80 * d
                 else x),
-                (if keyPressed "Up" k then y - 80 * d
-                else if keyPressed "Down" k then y + 80 * d
+                (if keyPressed keyUp k then y - 80 * d
+                else if keyPressed keyDown k then y + 80 * d
                 else y))
         in DeltaState { 
             deltaEntities = [entity (e { playerPosition = (x', y') })], 

@@ -64,8 +64,18 @@ main = do
 
     onDestroy window $ writeIORef quitState True
 
-    let p1 = Player { playerPosition = (200, 200), playerId = entityIdDefault entityIdNew 1 }
-    let s = GameState { stateEntities = [entity p1], stateMap = world, stateKeys = newKeyState }
+    let p1 = Player { 
+        playerPosition = (200, 200), 
+        playerKeys = ("Up", "Down", "Left", "Right", "Control", "Alt"),
+        playerId = entityIdDefault entityIdNew 1 }
+    let p2 = Player { 
+        playerPosition = (200, 200), 
+        playerKeys = ("w", "s", "a", "d", "q", "1"),
+        playerId = entityIdDefault entityIdNew 2 }
+    let s = GameState { 
+        stateEntities = [entity p1, entity p2], 
+        stateMap = world, 
+        stateKeys = newKeyState }
 
     newTime <- getClockTime
     mainLoop canvas backgroundSurface quitState keyState newTime s
