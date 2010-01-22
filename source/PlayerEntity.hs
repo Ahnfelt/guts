@@ -1,6 +1,7 @@
 module PlayerEntity where
 import Graphics.Rendering.Cairo
 import Control.Monad
+import BulletEntity
 import GameState
 import KeyState
 import Mechanics
@@ -18,7 +19,7 @@ instance Entity Player where
         let splatter = forM_ m $ \m -> case m of
                 MessageCollide _ -> do
                     setSourceRGBA 1 0 0 0.5
-                    arc 0 0 30 0 (2 * pi)
+                    arc 10 10 30 0 (2 * pi)
                     fill in
         let k = stateKeys s in
         let (keyUp, keyDown, keyLeft, keyRight, keyPrimary, keySecondary) = playerKeys e in
@@ -29,25 +30,34 @@ instance Entity Player where
                 else x),
                 (if keyPressed keyUp k then y - 80 * d
                 else if keyPressed keyDown k then y + 80 * d
-                else y))
-        in DeltaState { 
-            deltaEntities = [entity (e { playerPosition = (x', y') })], 
+                else y)) in
+        let es = if keyPressed keyPrimary k then [entity $ Bullet { 
+                bulletPosition = (x' + 20, y' + 20), 
+                bulletVelocity = (150, 150),
+                bulletTime = 1.0,
+                bulletId = entityIdNew }] else [] in
+        DeltaState { 
+            deltaEntities = entity (e { playerPosition = (x', y') }):es, 
             deltaMessages = [],
-            deltaSplatter = do
+            deltaSplatter = Just $ do
                 splatter
                 setSourceRGBA 0 0 0 0.03
-                arc 0 0 10 0 (2 * pi)
+                arc 10 10 10 0 (2 * pi)
                 fill
         }
     
     entityPosition e = Just (playerPosition e)
 
+    entityBox e = Just (20, 20)
+
     entityDraw e = do
         setSourceRGB 1 0 0
-        arc 0 0 10 0 (2 * pi)
+        arc 10 10 10 0 (2 * pi)
         fill
 
     entityOnTop _ = True
+    
+    entityHitable _ = True
 
     entityId e = playerId e
 

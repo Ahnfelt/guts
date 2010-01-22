@@ -65,8 +65,8 @@ main = do
     onDestroy window $ writeIORef quitState True
 
     let p1 = Player { 
-        playerPosition = (200, 200), 
-        playerKeys = ("Up", "Down", "Left", "Right", "Control", "Alt"),
+        playerPosition = (500, 200), 
+        playerKeys = ("Up", "Down", "Left", "Right", "Shift_R", "Return"),
         playerId = entityIdDefault entityIdNew 1 }
     let p2 = Player { 
         playerPosition = (200, 200), 
@@ -81,7 +81,7 @@ main = do
     mainLoop canvas backgroundSurface quitState keyState newTime s
 
 mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
-mainLoop canvas surface quitState keyState t s = loop t s initialMessages 1000 where
+mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
     loop t s m i = do
         handleEvents
         k <- readIORef keyState
@@ -93,14 +93,26 @@ mainLoop canvas surface quitState keyState t s = loop t s initialMessages 1000 w
             let us = map (\e -> (e, entityUpdate e s' (messages e m) d)) (stateEntities s')
             let es' = concat $ map deltaEntities (map snd us)
             let es'' = map (\(i, e) -> entityChangeId e (entityIdDefault (entityId e) i)) (zip [i..] es')
+            print (length es'')
             let s'' = s' { stateEntities = es'' }
-            let m' = messageMap (concat $ map deltaMessages (map snd us))
-            renderWith surface (drawSplatter (map (\(e, d) -> (e, deltaSplatter d)) us))
+            let m' = concat $ map deltaMessages (map snd us)
+            let m'' = [(entityId e1, MessageCollide e2) | 
+                    e1 <- es'', e2 <- es'', entityId e1 /= entityId e2,
+                    entityHitable e1 || entityHitable e2,
+                    Just p1 <- [entityPosition e1], Just b1 <- [entityBox e1],
+                    Just p2 <- [entityPosition e2], Just b2 <- [entityBox e2],
+                    overlap (p1, b2) (p2, b2)]
+            let m''' = messageMap (m'' ++ m')
+            renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
             updateGraphics s'' canvas surface
-            loop t' s'' m' (i + fromIntegral (length es'))
+            loop t' s'' m''' (i + fromIntegral (length es'))
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
-    initialMessages = (Map.singleton (entityIdDefault entityIdNew 1) [MessageCollide undefined])
+    overlap ((x1, y1), (w1, h1)) ((x2, y2), (w2, h2)) = 
+        intersectRange (x1, x1 + w1 - 1) (x2, x2 + w2 - 1) && intersectRange (y1, y1 + h1 - 1) (y2, y2 + h2 - 1)
+        where
+            intersectRange (x1, x2) (x1', x2') | x1 <= x1' = x2 >= x1'
+            intersectRange c c' = intersectRange c' c
 
 handleEvents :: IO ()
 handleEvents = do

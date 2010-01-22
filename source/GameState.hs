@@ -29,7 +29,7 @@ data DeltaState = DeltaState {
     -- Messages to send to the entities identified by the IDs
     deltaMessages :: [(EntityId, Message)],
     -- A permanent drawing to add to the background image
-    deltaSplatter :: Render ()
+    deltaSplatter :: Maybe (Render ())
 }
 
 -- The type class for players, monsters, items, particles, etc.
@@ -39,10 +39,14 @@ class Entity a where
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position
+    -- An entity has a bounding box if it can collide with other entities
+    entityBox :: a -> Maybe Dimension
     -- Returns the current graphical representation of the entity
     entityDraw :: a -> Render ()
     -- Should this be drawn on top of items and such?
     entityOnTop :: a -> Bool
+    -- Non-hitables do not collide with each other (but can collide with hitables)
+    entityHitable :: a -> Bool
     -- The identity of the entity
     entityId :: a -> EntityId
     -- The identity of the entity
@@ -61,8 +65,10 @@ data AbstractEntity = forall a. (Entity a) => AbstractEntity a
 instance Entity AbstractEntity where
     entityUpdate (AbstractEntity e) = entityUpdate e
     entityPosition (AbstractEntity e) = entityPosition e
+    entityBox (AbstractEntity e) = entityBox e
     entityDraw (AbstractEntity e) = entityDraw e
     entityOnTop (AbstractEntity e) = entityOnTop e
+    entityHitable (AbstractEntity e) = entityHitable e
     entityId (AbstractEntity e) = entityId e
     entityChangeId (AbstractEntity e) = entityChangeId e
     entity e = e -- Avoids needless boxing
