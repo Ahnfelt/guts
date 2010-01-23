@@ -5,6 +5,7 @@ import Graphics.Rendering.Cairo
 import System.Random
 import System.Time
 import Control.Monad
+import Control.Arrow
 import Data.Array.Diff
 import Data.IORef
 import qualified Data.Set as Set
@@ -64,18 +65,18 @@ main = do
 
     onDestroy window $ writeIORef quitState True
 
-    let p1 = Player { 
-        playerPosition = (500, 200), 
-        playerKeys = ("Up", "Down", "Left", "Right", "Shift_R", "Return"),
-        playerId = entityIdDefault entityIdNew 1 }
-    let p2 = Player { 
-        playerPosition = (200, 200), 
-        playerKeys = ("w", "s", "a", "d", "q", "1"),
-        playerId = entityIdDefault entityIdNew 2 }
+    let p1 = playerNew 
+            (500, 200) 
+            ("Up", "Down", "Left", "Right", "Shift_R", "Return")
+            (entityIdNew 1)
+    let p2 = playerNew 
+            (200, 200) 
+            ("w", "s", "a", "d", "q", "1")
+            (entityIdNew 2)
     let s = GameState { 
-        stateEntities = [entity p1, entity p2], 
+        stateEntities = [AbstractEntity p1, AbstractEntity p2], 
         stateMap = world, 
-        stateKeys = newKeyState }
+        stateKeys = \_ -> False }
 
     newTime <- getClockTime
     mainLoop canvas backgroundSurface quitState keyState newTime s
@@ -87,18 +88,20 @@ mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
         k <- readIORef keyState
         q <- readIORef quitState
         when (not q) $ do
-            let s' = s { stateKeys = k }
+            let s' = s { stateKeys = \b -> keyPressed b k }
             t' <- getClockTime
             let d = diffClockTime t t'
-            let us = map (\e -> (e, entityUpdate e s' (messages e m) d)) (stateEntities s')
+            r <- getStdRandom (first randoms . split)
+            let us = map (\(e, r') -> (e, entityUpdate e s' (messages e m) r' d)) (zip (stateEntities s') r)
             let es' = concat $ map deltaEntities (map snd us)
-            let es'' = map (\(i, e) -> entityChangeId e (entityIdDefault (entityId e) i)) (zip [i..] es')
+            let es'' = map (\(i, e) -> e (entityIdNew i)) (zip [i..] es')
             print (length es'')
             let s'' = s' { stateEntities = es'' }
             let m' = concat $ map deltaMessages (map snd us)
             let m'' = [(entityId e1, MessageCollide e2) | 
-                    e1 <- es'', e2 <- es'', entityId e1 /= entityId e2,
+                    e1 <- es'', e2 <- es'', 
                     entityHitable e1 || entityHitable e2,
+                    entityId e1 /= entityId e2,
                     Just p1 <- [entityPosition e1], Just b1 <- [entityBox e1],
                     Just p2 <- [entityPosition e2], Just b2 <- [entityBox e2],
                     overlap (p1, b2) (p2, b2)]
