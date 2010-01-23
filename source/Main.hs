@@ -136,10 +136,10 @@ mainLoop canvas surface quitState dumpState debugState keyState t s = loop t s M
         entityId e1 /= entityId e2,
         Just (x1, y1) <- [entityPosition e1], Just r1 <- [entityRadius e1],
         Just (x2, y2) <- [entityPosition e2], Just r2 <- [entityRadius e2],
-        overlap (x1, y1, r1) (x2, y2, r2)]
-    overlap (x1, y1, r1) (x2, y2, r2) = 
-        let x = (x2 - x1) in
-        let y = (y2 - y1) in
+        overlap (x1, y1) r1 (x2, y2) r2]
+    overlap (x1, y1) r1 (x2, y2) r2 = 
+        let x = x2 - x1 in
+        let y = y2 - y1 in
         let r = r1 + r2 in
         x * x + y * y < r * r
 

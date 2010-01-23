@@ -66,7 +66,7 @@ instance Entity Player where
                 splatter
                 when k' $ do
                     rotate (playerAimAngle e)
-                    setSourceRGBA 0 0.1 0 0.05
+                    setSourceRGBA 0 0.1 0 0.08
                     arc 0 5 3 0 (2 * pi)
                     fill
                     arc 0 (-5) 3 0 (2 * pi)
