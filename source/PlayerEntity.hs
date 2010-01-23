@@ -2,6 +2,7 @@ module PlayerEntity (playerNew) where
 import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
+import Data.Unique (Unique)
 import BulletEntity
 import GameState
 import KeyState
@@ -13,10 +14,10 @@ data Player = Player {
     playerAimAngle :: Double,
     playerMoveAngle :: Double,
     playerKeys :: (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton),
-    playerId :: EntityId
+    playerId :: Unique
 }
 
-playerNew :: Position -> (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton) -> (EntityId -> AbstractEntity)
+playerNew :: Position -> (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton) -> (Unique -> AbstractEntity)
 playerNew p k = \i -> AbstractEntity $ Player {
     playerPosition = p,
     playerAimAngle = 0,
@@ -52,7 +53,7 @@ instance Entity Player where
         let (ad, md) = if not k' then (0, 0) else 
                 if k keyPrimary || k keySecondary then (5, 80) else (10, 120) in
         let p' = p .+ velocity a' (md * d) in
-        let aa' = approximateAngle aa a (ad * d) in
+        let aa' = approximateAngle (ad * d) aa a in
         let es = if k keyPrimary then [fireBullet p' 0.30 aa' r1, fireBullet p' 0.10 aa' r2] else [] in
         DeltaState { 
             deltaEntities = const (AbstractEntity (e { 
@@ -88,11 +89,11 @@ instance Entity Player where
 
     entityId e = playerId e
 
-fireBullet :: Position -> Double -> Double -> Int -> (EntityId -> AbstractEntity)
+fireBullet :: Position -> Double -> Double -> Int -> (Unique -> AbstractEntity)
 fireBullet p s a r = 
     let r1:r2:r3:r4:_ = randoms (mkStdGen r) in 
     bulletNew 
-        (p .+ velocity a (15 + 5 * r4))
+        (p .+ velocity a (20 + 5 * r4))
         (velocity (a - 0.5 * s + r1 * s) (100 + r2 * 50) .* 1.5)
         1.0
 

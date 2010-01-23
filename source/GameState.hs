@@ -3,11 +3,10 @@ module GameState (
     GameState (..), 
     DeltaState (..), 
     AbstractEntity (..),
-    Entity (..),
-    EntityId, entityIdNew,
-    Message
+    Entity (..)
     ) where
 import Graphics.Rendering.Cairo (Render)
+import Data.Unique (Unique)
 import KeyState
 import Mechanics
 import Tile
@@ -25,9 +24,9 @@ data GameState = GameState {
 -- This represents the result of updating an entity (changes to the game state)
 data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
-    deltaEntities :: [EntityId -> AbstractEntity],
+    deltaEntities :: [Unique -> AbstractEntity],
     -- Messages to send to the entities identified by the IDs
-    deltaMessages :: [(EntityId, Message)],
+    deltaMessages :: [(Unique, Message)],
     -- A permanent drawing to add to the background image
     deltaSplatter :: Maybe (Render ())
 }
@@ -35,7 +34,7 @@ data DeltaState = DeltaState {
 -- The type class for players, monsters, items, particles, etc.
 class Entity a where
     -- The function that updates an entity (self, state, messages, randomSeed, deltaTime)
-    entityUpdate :: a -> GameState -> [Message] -> Int -> Double -> DeltaState
+    entityUpdate :: a -> GameState -> [Message] -> Int -> Duration -> DeltaState
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position
@@ -48,7 +47,7 @@ class Entity a where
     -- Non-hitables do not collide with each other (but can collide with hitables)
     entityHitable :: a -> Bool
     -- The identity of the entity
-    entityId :: a -> EntityId
+    entityId :: a -> Unique
 
 -- This is to be able to store different kinds of entities in lists.
 -- When you make functions to work at entities, please use 
@@ -56,7 +55,7 @@ class Entity a where
 -- is more general (ie. it will also work on concrete entities).
 data AbstractEntity = forall a. (Entity a) => AbstractEntity a
 
--- This enables you to work on abstract entities
+-- This enables you to work on abstract entities - it just delegates everything
 instance Entity AbstractEntity where
     entityUpdate (AbstractEntity e) = entityUpdate e
     entityPosition (AbstractEntity e) = entityPosition e
@@ -66,9 +65,5 @@ instance Entity AbstractEntity where
     entityHitable (AbstractEntity e) = entityHitable e
     entityId (AbstractEntity e) = entityId e
     
-newtype EntityId = EntityId Integer deriving (Eq, Ord)
-
-entityIdNew i = EntityId i
-
 type Message = AbstractMessage AbstractEntity
 

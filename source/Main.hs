@@ -6,6 +6,7 @@ import System.Random
 import System.Time
 import Control.Monad
 import Control.Arrow
+import Data.Unique
 import Data.Array.Diff
 import Data.IORef
 import qualified Data.Set as Set
@@ -14,6 +15,7 @@ import qualified OutdoorPainter
 import qualified BasePainter
 import GameState
 import KeyState
+import Mechanics
 import Message
 import Tile
 import PlayerEntity
@@ -65,14 +67,16 @@ main = do
 
     onDestroy window $ writeIORef quitState True
 
+    i1 <- newUnique
+    i2 <- newUnique
     let p1 = playerNew 
             (500, 200) 
             ("Up", "Down", "Left", "Right", "Shift_R", "Return")
-            (entityIdNew 1)
+            i1
     let p2 = playerNew 
             (200, 200) 
             ("w", "s", "a", "d", "q", "1")
-            (entityIdNew 2)
+            i2
     let s = GameState { 
         stateEntities = [AbstractEntity p1, AbstractEntity p2], 
         stateMap = world, 
@@ -82,8 +86,8 @@ main = do
     mainLoop canvas backgroundSurface quitState keyState newTime s
 
 mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
-mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
-    loop t s m i = do
+mainLoop canvas surface quitState keyState t s = loop t s Map.empty where
+    loop t s m = do
         handleEvents
         k <- readIORef keyState
         q <- readIORef quitState
@@ -94,7 +98,9 @@ mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
             r <- getStdRandom (first randoms . split)
             let us = map (\(e, r') -> (e, entityUpdate e s' (messages e m) r' d)) (zip (stateEntities s') r)
             let es' = concat $ map deltaEntities (map snd us)
-            let es'' = map (\(i, e) -> e (entityIdNew i)) (zip [i..] es')
+            es'' <- forM es' $ \e -> do
+                i <- newUnique
+                return (e i)
             print (length es'')
             let s'' = s' { stateEntities = es'' }
             let m' = concat $ map deltaMessages (map snd us)
@@ -108,7 +114,7 @@ mainLoop canvas surface quitState keyState t s = loop t s Map.empty 1000 where
             let m''' = messageMap (m'' ++ m')
             renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
             updateGraphics s'' canvas surface
-            loop t' s'' m''' (i + fromIntegral (length es'))
+            loop t' s'' m'''
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
     overlap ((x1, y1), (w1, h1)) ((x2, y2), (w2, h2)) = 
@@ -126,7 +132,7 @@ handleEvents = do
             mainIteration
             handleEvents
 
-diffClockTime :: ClockTime -> ClockTime -> Double
+diffClockTime :: ClockTime -> ClockTime -> Duration
 diffClockTime (TOD s1 p1) (TOD s2 p2) =
     let ds = fromIntegral (s2 - s1)
         dp = fromIntegral (p2 - p1)
