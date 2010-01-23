@@ -32,7 +32,7 @@ data DeltaState = DeltaState {
 }
 
 -- The type class for players, monsters, items, particles, etc.
-class Entity a where
+class (Show a) => Entity a where
     -- The function that updates an entity (self, state, messages, randomSeed, deltaTime)
     entityUpdate :: a -> GameState -> [Message] -> Int -> Duration -> DeltaState
     -- Returns the current position of the entity (if any)
@@ -53,7 +53,7 @@ class Entity a where
 -- When you make functions to work at entities, please use 
 -- (Entity a) => ... instead of AbstractEntity, as the former
 -- is more general (ie. it will also work on concrete entities).
-data AbstractEntity = forall a. (Entity a) => AbstractEntity a
+data AbstractEntity = forall a. (Show a, Entity a) => AbstractEntity a
 
 -- This enables you to work on abstract entities - it just delegates everything
 instance Entity AbstractEntity where
@@ -64,6 +64,15 @@ instance Entity AbstractEntity where
     entityOnTop (AbstractEntity e) = entityOnTop e
     entityHitable (AbstractEntity e) = entityHitable e
     entityId (AbstractEntity e) = entityId e
-    
+
+instance Show AbstractEntity where
+    show (AbstractEntity e) = show e
+
+instance Show GameState where
+    show s = show (stateEntities s)
+
+instance Show Unique where
+    show i = "#"
+
 type Message = AbstractMessage AbstractEntity
 

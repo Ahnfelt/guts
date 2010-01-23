@@ -50,11 +50,15 @@ main = do
     renderWith backgroundSurface (drawBackgroundTiles world painters)
 
     quitState <- newIORef False
+    dumpState <- newIORef False
     keyState <- newIORef newKeyState
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
         "Escape" -> do
             writeIORef quitState True
+            return True
+        "F12" -> do
+            writeIORef dumpState True
             return True
         k -> do 
             modifyIORef keyState (keyPress k)
@@ -83,16 +87,21 @@ main = do
         stateKeys = \_ -> False }
 
     newTime <- getClockTime
-    mainLoop canvas backgroundSurface quitState keyState newTime s
+    mainLoop canvas backgroundSurface quitState dumpState keyState newTime s
 
-mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
-mainLoop canvas surface quitState keyState t s = loop t s Map.empty where
+mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
+mainLoop canvas surface quitState dumpState keyState t s = loop t s Map.empty where
     loop t s m = do
         handleEvents
-        k <- readIORef keyState
-        q <- readIORef quitState
-        when (not q) $ do
-            let s' = s { stateKeys = \b -> keyPressed b k }
+        keys <- readIORef keyState
+        dump <- readIORef dumpState
+        quit <- readIORef quitState
+        when dump $ do
+            putStrLn ("GameState at " ++ show t ++ ":")
+            print s
+            writeIORef dumpState False
+        when (not quit) $ do
+            let s' = s { stateKeys = \b -> keyPressed b keys }
             t' <- getClockTime
             let d = diffClockTime t t'
             r <- getStdRandom (first randoms . split)

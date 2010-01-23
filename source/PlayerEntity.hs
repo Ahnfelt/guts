@@ -11,12 +11,13 @@ import Message
 
 data Player = Player { 
     playerPosition :: Position,
-    playerAimAngle :: Double,
-    playerMoveAngle :: Double,
+    playerAimAngle :: Angle,
+    playerMoveAngle :: Angle,
     playerKeys :: (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton),
     playerId :: Unique
-}
+} deriving Show
 
+-- (position, (up, down, left, right, primary, secondary))
 playerNew :: Position -> (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton) -> (Unique -> AbstractEntity)
 playerNew p k = \i -> AbstractEntity $ Player {
     playerPosition = p,
@@ -54,7 +55,7 @@ instance Entity Player where
                 if k keyPrimary || k keySecondary then (5, 80) else (10, 120) in
         let p' = p .+ velocity a' (md * d) in
         let aa' = approximateAngle (ad * d) aa a in
-        let es = if k keyPrimary then [fireBullet p' 0.30 aa' r1, fireBullet p' 0.10 aa' r2] else [] in
+        let es = if k keyPrimary then [fireBullet p' aa' 0.30 r1, fireBullet p' aa' 0.10 r2] else [] in
         DeltaState { 
             deltaEntities = const (AbstractEntity (e { 
                 playerAimAngle = aa',
@@ -89,8 +90,9 @@ instance Entity Player where
 
     entityId e = playerId e
 
+-- (start, angle, spread, seed)
 fireBullet :: Position -> Angle -> Angle -> Int -> (Unique -> AbstractEntity)
-fireBullet p s a r = 
+fireBullet p a s r = 
     let r1:r2:r3:r4:_ = randoms (mkStdGen r) in 
     bulletNew 
         (p .+ velocity a (20 + 5 * r4))
