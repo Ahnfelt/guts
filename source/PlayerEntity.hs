@@ -89,7 +89,7 @@ instance Entity Player where
 
     entityId e = playerId e
 
-fireBullet :: Position -> Double -> Double -> Int -> (Unique -> AbstractEntity)
+fireBullet :: Position -> Angle -> Angle -> Int -> (Unique -> AbstractEntity)
 fireBullet p s a r = 
     let r1:r2:r3:r4:_ = randoms (mkStdGen r) in 
     bulletNew 
