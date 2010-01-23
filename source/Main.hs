@@ -6,9 +6,10 @@ import System.Random
 import System.Time
 import Control.Monad
 import Control.Arrow
-import Data.Unique
 import Data.Array.Diff
 import Data.IORef
+import Data.Unique
+import Data.Maybe
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified OutdoorPainter
@@ -51,14 +52,20 @@ main = do
 
     quitState <- newIORef False
     dumpState <- newIORef False
+    debugState <- newIORef False
     keyState <- newIORef newKeyState
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
         "Escape" -> do
             writeIORef quitState True
             return True
-        "F12" -> do
+        "F11" -> do
             writeIORef dumpState True
+            return True
+        "F12" -> do
+            s <- readIORef debugState
+            writeIORef debugState (not s)
+            putStrLn ("Debug: " ++ show (not s))
             return True
         k -> do 
             modifyIORef keyState (keyPress k)
@@ -87,14 +94,17 @@ main = do
         stateKeys = \_ -> False }
 
     newTime <- getClockTime
-    mainLoop canvas backgroundSurface quitState dumpState keyState newTime s
+    mainLoop canvas backgroundSurface quitState dumpState debugState keyState newTime s
 
-mainLoop :: (WidgetClass widget) => widget -> Surface -> IORef Bool -> IORef Bool -> IORef KeyState -> ClockTime -> GameState -> IO ()
-mainLoop canvas surface quitState dumpState keyState t s = loop t s Map.empty where
+mainLoop :: (WidgetClass widget) => widget -> Surface -> 
+    IORef Bool -> IORef Bool -> IORef Bool -> IORef KeyState -> 
+    ClockTime -> GameState -> IO ()
+mainLoop canvas surface quitState dumpState debugState keyState t s = loop t s Map.empty where
     loop t s m = do
         handleEvents
         keys <- readIORef keyState
         dump <- readIORef dumpState
+        debug <- readIORef debugState
         quit <- readIORef quitState
         when dump $ do
             putStrLn ("GameState at " ++ show t ++ ":")
@@ -110,27 +120,28 @@ mainLoop canvas surface quitState dumpState keyState t s = loop t s Map.empty wh
             es'' <- forM es' $ \e -> do
                 i <- newUnique
                 return (e i)
-            print (length es'')
             let s'' = s' { stateEntities = es'' }
             let m' = concat $ map deltaMessages (map snd us)
-            let m'' = [(entityId e1, MessageCollide e2) | 
-                    e1 <- es'', e2 <- es'', 
-                    entityHitable e1 || entityHitable e2,
-                    entityId e1 /= entityId e2,
-                    Just p1 <- [entityPosition e1], Just b1 <- [entityBox e1],
-                    Just p2 <- [entityPosition e2], Just b2 <- [entityBox e2],
-                    overlap (p1, b2) (p2, b2)]
+            let m'' = collisions es''
             let m''' = messageMap (m'' ++ m')
             renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
-            updateGraphics s'' canvas surface
+            updateGraphics s'' canvas surface debug
+            when debug $ putStrLn ("Entity count: " ++ show (length es''))
             loop t' s'' m'''
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
-    overlap ((x1, y1), (w1, h1)) ((x2, y2), (w2, h2)) = 
-        intersectRange (x1, x1 + w1 - 1) (x2, x2 + w2 - 1) && intersectRange (y1, y1 + h1 - 1) (y2, y2 + h2 - 1)
-        where
-            intersectRange (x1, x2) (x1', x2') | x1 <= x1' = x2 >= x1'
-            intersectRange c c' = intersectRange c' c
+    collisions es =  [(entityId e1, MessageCollide e2) | 
+        e1 <- es, e2 <- es,
+        entityHitable e1 || entityHitable e2,
+        entityId e1 /= entityId e2,
+        Just (x1, y1) <- [entityPosition e1], Just r1 <- [entityRadius e1],
+        Just (x2, y2) <- [entityPosition e2], Just r2 <- [entityRadius e2],
+        overlap (x1, y1, r1) (x2, y2, r2)]
+    overlap (x1, y1, r1) (x2, y2, r2) = 
+        let x = (x2 - x1) in
+        let y = (y2 - y1) in
+        let r = r1 + r2 in
+        x * x + y * y < r * r
 
 handleEvents :: IO ()
 handleEvents = do
@@ -147,8 +158,8 @@ diffClockTime (TOD s1 p1) (TOD s2 p2) =
         dp = fromIntegral (p2 - p1)
     in ds + (dp * 1e-12)
 
-updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> IO Bool
-updateGraphics gameState canvas backgroundSurface = do
+updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> Bool -> IO Bool
+updateGraphics gameState canvas backgroundSurface debug = do
     let (x, y) = (0, 0)
     (w, h) <- widgetGetSize canvas
     drawable <- widgetGetDrawWindow canvas
@@ -158,6 +169,9 @@ updateGraphics gameState canvas backgroundSurface = do
         paint
         mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
         mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
+        when debug $ do
+            mapM_ drawDebug [(e, x, y, fromMaybe 3 (entityRadius e)) | e <- stateEntities gameState, 
+                Just (x, y) <- [entityPosition e]]
     drawWindowEndPaint drawable
     return True
 
@@ -166,6 +180,19 @@ drawEntity (e, x, y) = do
     save
     translate x y
     entityDraw e
+    restore
+
+drawDebug :: (Entity t) => (t, Double, Double, Double) -> Render ()
+drawDebug (e, x, y, r) = do
+    save
+    setSourceRGB 0 0 0
+    setLineWidth 2
+    arc x y r 0 (2 * pi)
+    stroke
+    setSourceRGB 1 0 1
+    setLineWidth 1
+    arc x y r 0 (2 * pi)
+    stroke
     restore
 
 drawSplatter :: (Entity t) => [(t, Render ())] -> Render ()

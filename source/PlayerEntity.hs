@@ -34,7 +34,7 @@ instance Entity Player where
         let splatter = forM_ m $ \m -> case m of
                 MessageCollide _ -> do
                     setSourceRGBA 0 0 0 0.5
-                    arc 10 10 30 0 (2 * pi)
+                    arc 0 0 30 0 (2 * pi)
                     fill in
         let k = stateKeys s in
         let (keyUp, keyDown, keyLeft, keyRight, keyPrimary, keySecondary) = playerKeys e in
@@ -64,9 +64,13 @@ instance Entity Player where
             deltaMessages = [],
             deltaSplatter = Just $ do
                 splatter
-                setSourceRGBA 0 0 0 0.03
-                arc 10 10 10 0 (2 * pi)
-                fill
+                when k' $ do
+                    rotate (playerAimAngle e)
+                    setSourceRGBA 0 0.1 0 0.05
+                    arc 0 5 3 0 (2 * pi)
+                    fill
+                    arc 0 (-5) 3 0 (2 * pi)
+                    fill
         }
     
     entityPosition e = Just (playerPosition e)
@@ -85,7 +89,7 @@ instance Entity Player where
 
     entityOnTop _ = True
     
-    entityHitable _ = False -- The corners of the bounding boxes are hard to work with
+    entityHitable _ = True
 
     entityId e = playerId e
 
