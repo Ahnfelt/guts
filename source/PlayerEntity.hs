@@ -71,10 +71,9 @@ instance Entity Player where
     
     entityPosition e = Just (playerPosition e)
 
-    entityBox e = Just (20, 20)
+    entityRadius e = Just 10
 
     entityDraw e = do
-        translate 10 10
         rotate (playerAimAngle e)
         setSourceRGB 1 0 0
         arc 0 0 10 0 (2 * pi)

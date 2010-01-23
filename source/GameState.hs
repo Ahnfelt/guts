@@ -38,8 +38,8 @@ class (Show a) => Entity a where
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position
-    -- An entity has a bounding box if it can collide with other entities
-    entityBox :: a -> Maybe Dimension
+    -- An entity has a bounding circle if it can collide with other entities
+    entityRadius :: a -> Maybe Double
     -- Returns the current graphical representation of the entity
     entityDraw :: a -> Render ()
     -- Should this be drawn on top of items and such?
@@ -59,10 +59,10 @@ data AbstractEntity = forall a. (Show a, Entity a) => AbstractEntity a
 instance Entity AbstractEntity where
     entityUpdate (AbstractEntity e) = entityUpdate e
     entityPosition (AbstractEntity e) = entityPosition e
-    entityBox (AbstractEntity e) = entityBox e
+    entityRadius (AbstractEntity e) = entityRadius e
+    entityHitable (AbstractEntity e) = entityHitable e
     entityDraw (AbstractEntity e) = entityDraw e
     entityOnTop (AbstractEntity e) = entityOnTop e
-    entityHitable (AbstractEntity e) = entityHitable e
     entityId (AbstractEntity e) = entityId e
 
 instance Show AbstractEntity where
