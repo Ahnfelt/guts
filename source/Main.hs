@@ -14,6 +14,7 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified OutdoorPainter
 import qualified BasePainter
+import qualified Image
 import GameState
 import KeyState
 import Mechanics
@@ -93,13 +94,14 @@ main = do
         stateMap = world, 
         stateKeys = \_ -> False }
 
-    newTime <- getClockTime
-    mainLoop canvas backgroundSurface quitState dumpState debugState keyState newTime s
+    Image.imageWithAll $ \images -> do
+        newTime <- getClockTime
+        mainLoop canvas backgroundSurface images quitState dumpState debugState keyState newTime s
 
-mainLoop :: (WidgetClass widget) => widget -> Surface -> 
+mainLoop :: (WidgetClass widget) => widget -> Surface -> (String -> Surface) ->
     IORef Bool -> IORef Bool -> IORef Bool -> IORef KeyState -> 
     ClockTime -> GameState -> IO ()
-mainLoop canvas surface quitState dumpState debugState keyState t s = loop t s Map.empty where
+mainLoop canvas surface images quitState dumpState debugState keyState t s = loop t s Map.empty where
     loop t s m = do
         handleEvents
         keys <- readIORef keyState
@@ -125,7 +127,7 @@ mainLoop canvas surface quitState dumpState debugState keyState t s = loop t s M
             let m'' = collisions es''
             let m''' = messageMap (m'' ++ m')
             renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
-            updateGraphics s'' canvas surface debug
+            updateGraphics s'' canvas surface images debug
             when debug $ putStrLn ("Entity count: " ++ show (length es''))
             loop t' s'' m'''
     messages e ms = Map.findWithDefault [] (entityId e) ms
@@ -158,8 +160,8 @@ diffClockTime (TOD s1 p1) (TOD s2 p2) =
         dp = fromIntegral (p2 - p1)
     in ds + (dp * 1e-12)
 
-updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> Bool -> IO Bool
-updateGraphics gameState canvas backgroundSurface debug = do
+updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> (String -> Surface) -> Bool -> IO Bool
+updateGraphics gameState canvas backgroundSurface images debug = do
     let (x, y) = (0, 0)
     (w, h) <- widgetGetSize canvas
     drawable <- widgetGetDrawWindow canvas
@@ -167,19 +169,19 @@ updateGraphics gameState canvas backgroundSurface debug = do
     renderWithDrawable drawable $ do
         setSourceSurface backgroundSurface (-x) (-y)
         paint
-        mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
-        mapM_ drawEntity [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
+        mapM_ (drawEntity images) [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
+        mapM_ (drawEntity images) [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
         when debug $ do
             mapM_ drawDebug [(e, x, y, fromMaybe 3 (entityRadius e)) | e <- stateEntities gameState, 
                 Just (x, y) <- [entityPosition e]]
     drawWindowEndPaint drawable
     return True
 
-drawEntity :: (Entity t) => (t, Double, Double) -> Render ()
-drawEntity (e, x, y) = do
+drawEntity :: (Entity t) => (String -> Surface) -> (t, Double, Double) -> Render ()
+drawEntity images (e, x, y) = do
     save
     translate x y
-    entityDraw e
+    entityDraw e images
     restore
 
 drawDebug :: (Entity t) => (t, Double, Double, Double) -> Render ()

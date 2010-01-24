@@ -1,11 +1,11 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module GameState (
     GameState (..), 
-    DeltaState (..), 
+    DeltaState (..), deltaStateNew,
     AbstractEntity (..),
     Entity (..)
     ) where
-import Graphics.Rendering.Cairo (Render)
+import Graphics.Rendering.Cairo (Render, Surface)
 import Data.Unique (Unique)
 import KeyState
 import Mechanics
@@ -31,6 +31,8 @@ data DeltaState = DeltaState {
     deltaSplatter :: Maybe (Render ())
 }
 
+deltaStateNew = DeltaState { deltaEntities = [], deltaMessages = [], deltaSplatter = Nothing }
+
 -- The type class for players, monsters, items, particles, etc.
 class (Show a) => Entity a where
     -- The function that updates an entity (self, state, messages, randomSeed, deltaTime)
@@ -38,10 +40,10 @@ class (Show a) => Entity a where
     -- Returns the current position of the entity (if any)
     -- Entities without a position won't be drawn at all
     entityPosition :: a -> Maybe Position
-    -- An entity has a bounding circle if it can collide with other entities
+    -- An entity must have a bounding circle if it wants to collide with other entities
     entityRadius :: a -> Maybe Double
     -- Returns the current graphical representation of the entity
-    entityDraw :: a -> Render ()
+    entityDraw :: a -> (String -> Surface) -> Render ()
     -- Should this be drawn on top of items and such?
     entityOnTop :: a -> Bool
     -- Non-hitables do not collide with each other (but can collide with hitables)
