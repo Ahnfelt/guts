@@ -169,11 +169,11 @@ updateGraphics gameState canvas backgroundSurface images debug = do
     renderWithDrawable drawable $ do
         setSourceSurface backgroundSurface (-x) (-y)
         paint
-        mapM_ (drawEntity images) [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], not (entityOnTop e)]
-        mapM_ (drawEntity images) [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e], entityOnTop e]
+        let es = [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e]]
+        mapM_ (drawEntity images) [(e, x, y) | (e, x, y) <- es, not (entityOnTop e)]
+        mapM_ (drawEntity images) [(e, x, y) | (e, x, y) <- es, entityOnTop e]
         when debug $ do
-            mapM_ drawDebug [(e, x, y, fromMaybe 3 (entityRadius e)) | e <- stateEntities gameState, 
-                Just (x, y) <- [entityPosition e]]
+            mapM_ drawDebug [(e, x, y, r) | (e, x, y) <- es, Just r <- [entityRadius e]]
     drawWindowEndPaint drawable
     return True
 

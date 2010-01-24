@@ -38,9 +38,9 @@ class (Show a) => Entity a where
     -- The function that updates an entity (self, state, messages, randomSeed, deltaTime)
     entityUpdate :: a -> GameState -> [Message] -> Int -> Duration -> DeltaState
     -- Returns the current position of the entity (if any)
-    -- Entities without a position won't be drawn at all
+    -- Entities without a position won't be drawn and won't collide
     entityPosition :: a -> Maybe Position
-    -- An entity must have a bounding circle if it wants to collide with other entities
+    -- An only collides with other entities if it has a bounding circle
     entityRadius :: a -> Maybe Double
     -- Returns the current graphical representation of the entity
     entityDraw :: a -> (String -> Surface) -> Render ()

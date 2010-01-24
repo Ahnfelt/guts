@@ -80,9 +80,9 @@ instance Entity Player where
         lineTo 0 0
         fill
 
-    entityOnTop _ = True
+    entityOnTop e = True
     
-    entityHitable _ = True
+    entityHitable e = True
 
     entityId e = playerId e
 

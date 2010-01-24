@@ -47,7 +47,8 @@ instance Entity Flame where
     
     entityPosition e = Just (flamePosition e)
 
-    entityRadius e = Just 1
+    entityRadius e | age e < 0.9 = Just 1
+    entityRadius e = Nothing
 
     entityDraw e i = do
         when (age e < 0.9) $ do
@@ -66,11 +67,12 @@ instance Entity Flame where
         setSourceSurface (i "flame3.png") (-25) (-25)
         paint
 
-    entityOnTop _ = True
+    entityOnTop e = True
 
-    entityHitable _ = False
+    entityHitable e = False
 
     entityId e = flameId e
 
+-- Calculates the age as a fraction of the total lifetime (0: youngest, 1: oldest)
 age e = 1 - flameTimeLeft e / flameTime e
 
