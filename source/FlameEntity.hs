@@ -18,7 +18,7 @@ data Flame = Flame {
     flameId :: Unique
 } deriving Show
 
--- (position, velocity, timeToLive)
+-- (position, velocity, angle, timeToLive, seed)
 flameNew :: Position -> Velocity -> Angle -> Duration -> Int -> (Unique -> AbstractEntity)
 flameNew p v a t r = let r1:_ = randoms (mkStdGen r) in \i -> AbstractEntity $ Flame {
     flamePosition = p,
