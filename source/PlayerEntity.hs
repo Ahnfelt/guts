@@ -90,9 +90,9 @@ instance Entity Player where
 fireFlame :: Position -> Angle -> Angle -> Int -> (Unique -> AbstractEntity)
 fireFlame p a s r =
     let (r0, r') = random (mkStdGen r) in
-    let r1:r2:r3:r4:_ = randoms r' in 
+    let r1:r2:r3:_ = randoms r' in 
     flameNew 
-        (p .+ velocity a (20 + 5 * r4))
+        (p .+ velocity a (20 + 5 * r2))
         (velocity (a - 0.5 * s + r1 * s) (100 + r2 * 50) .* 1.5)
         a
         1.0

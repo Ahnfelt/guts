@@ -30,7 +30,7 @@ data BaseTile
 
 data Tile
     = TileOutdoor OutdoorTile
-    | TileBase BaseTile Bool -- The flag is set if the tile is revealed
+    | TileBase BaseTile
     | TileAbyss
 
 -- Determines wether or not a tile is solid
@@ -49,11 +49,11 @@ instance TileLike OutdoorTile where
     tileLike _ _ = False
 
 instance TileLike BaseTile where
-    tileLike a (TileBase t _) = a == t
+    tileLike a (TileBase t) = a == t
     tileLike _ _ = False
 
 instance TileLike Tile where
-    tileLike t' (TileBase t _) = tileLike t t'
+    tileLike t' (TileBase t) = tileLike t t'
     tileLike t' (TileOutdoor t) = tileLike t t'
     tileLike TileAbyss TileAbyss = True
     tileLike _ _ = False
@@ -83,7 +83,7 @@ tileSet (TileMap a) x y t = let ((x1, y1), (x2, y2)) = bounds a in
 tileMap :: [[Char]] -> TileMap
 tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (map tile $ concat $ transpose l)
     where
-        tile 'b' = TileBase BaseBlock False
+        tile 'b' = TileBase BaseBlock
         tile '*' = TileOutdoor OutdoorGrass
         tile ' ' = TileOutdoor OutdoorBush
         tile '`' = TileOutdoor OutdoorRock

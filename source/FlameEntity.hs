@@ -42,7 +42,12 @@ instance Entity Flame where
                 flameTimeLeft = flameTimeLeft e - d,
                 flameVelocity = if not (null m) then (0, 0) else flameVelocity e,
                 flameRotation = flameRotation e + flameRotationSpeed e * d
-                }))]
+                }))],
+            deltaSplatter = Just $ do
+                setSourceRGBA 0 0 0 0.03
+                rotate (flameRotation e)
+                arc 0 10 10 0 (2 * pi)
+                stroke
         }
     
     entityPosition e = Just (flamePosition e)

@@ -87,7 +87,7 @@ main = do
             i1
     let p2 = playerNew 
             (200, 200) 
-            ("w", "s", "a", "d", "q", "1")
+            ("e", "d", "s", "f", "a", "q")
             i2
     let s = GameState { 
         stateEntities = [AbstractEntity p1, AbstractEntity p2], 
