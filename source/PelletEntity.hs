@@ -33,7 +33,7 @@ instance Entity Pellet where
     entityUpdate e s m r d | pelletTimeLeft e <= 0 = deltaStateNew
     entityUpdate e s m r d =
         let m' = concat $ map (\m -> case m of
-                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damagePiercing = 0.05 }))]
+                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damagePiercing = 0.02 }))]
                 _ -> []) m in
         let (x', y') = pelletPosition e .+ (pelletVelocity e .* d) in
         let newEntities = if not $ null m' then [] else [const (AbstractEntity (e { 
@@ -52,11 +52,11 @@ instance Entity Pellet where
     entityDraw e i = do
         rotate (pelletAngle e)
         setLineWidth 2
-        setSourceRGB 0.90 0.85 0.4 
+        setSourceRGB 0.90 0.80 0.4 
         lineTo 8 0
         stroke
         moveTo 4 2
-        setSourceRGB 1 1 1
+        setSourceRGB 0.9 0.9 0.7
         lineTo 7 0
         stroke
 
