@@ -4,6 +4,7 @@ import Control.Monad
 import System.Random
 import Data.Unique (Unique)
 import FlameEntity
+import PelletEntity
 import Damage
 import GameState
 import KeyState
@@ -58,12 +59,13 @@ instance Entity Player where
         let p' = p .+ velocity a' (md * d) in
         let aa' = if k keyPrimary || k keySecondary then aa else approximateAngle (ad * d) aa a in
         let es = if k keyPrimary then [fireFlame p' aa' 0.30 r1] else [] in
+        let es' = if k keySecondary then fireShotgun p' aa' 0.30 r1 else [] in
         deltaStateNew { 
             deltaEntities = const (AbstractEntity (e { 
                 playerAimAngle = aa',
                 playerMoveAngle = a',
                 playerHealth = playerHealth e - damage,
-                playerPosition = p'})):es, 
+                playerPosition = p'})):es++es', 
             deltaSplatter = Just $ do
                 when k' $ do
                     rotate (playerAimAngle e)
@@ -105,4 +107,18 @@ fireFlame p a s r =
         a
         1.0
         r0
+
+fireShotgun :: Position -> Angle -> Angle -> Int -> [(Unique -> AbstractEntity)]
+fireShotgun position angle spread seed =
+    let (seed', generator) = random (mkStdGen seed) in
+    take 10 $ map (firePellet seed') (randoms generator)
+    where
+        firePellet seed multiplier =
+            let angle' = angle - 0.5 * spread + multiplier * spread in 
+            pelletNew 
+                (position .+ velocity angle' 20)
+                (velocity angle' 600)
+                angle'
+                1.0
+                seed
 
