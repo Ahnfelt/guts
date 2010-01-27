@@ -33,3 +33,14 @@ interpolate t i ((d, v):ps) | t > d = interpolate (t - d) v ps
 interpolate t i ((d, v):ps) = let f = t / (d + 0.00001) in (1.0 - f) * i + f * v
 interpolate t i [] = i
 
+-- (length, accumulated)
+data Interval = Interval Duration Duration
+
+intervalNew length = Interval length 0.0
+
+intervalsSince :: Interval -> Duration -> (Int, Interval)
+intervalsSince (Interval length accumulated) deltaTime = 
+    let accumulated' = accumulated + deltaTime in
+    let intervals = truncate (accumulated' / length) in
+    (intervals, Interval (length) (accumulated' - fromIntegral intervals * length))
+
