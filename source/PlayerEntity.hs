@@ -30,8 +30,8 @@ playerNew p k = \i -> AbstractEntity $ Player {
     playerMoveAngle = 0,
     playerHealth = 1.0,
     playerKeys = k,
-    playerShotgunInterval = intervalNew 0.8,
-    playerFlameInterval = intervalNew 0.5,
+    playerShotgunInterval = intervalNew 0.80,
+    playerFlameInterval = intervalNew 0.03,
     playerId = i
     }
 
