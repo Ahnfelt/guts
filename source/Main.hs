@@ -72,10 +72,9 @@ main = do
             modifyIORef keyState (keyPress k)
             return True
 
-    onKeyRelease window $ \Key { eventKeyName = key } -> case key of
-        k -> do 
-            modifyIORef keyState (keyRelease k)
-            return True
+    onKeyRelease window $ \Key { eventKeyName = k } -> do
+        modifyIORef keyState (keyRelease k)
+        return True
 
     onDestroy window $ writeIORef quitState True
 

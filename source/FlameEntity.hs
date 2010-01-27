@@ -3,6 +3,7 @@ import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
+import Damage
 import GameState
 import Mechanics
 import Message
@@ -34,6 +35,9 @@ instance Entity Flame where
 
     entityUpdate e s m r d | flameTimeLeft e <= 0 = deltaStateNew
     entityUpdate e s m r d =
+        let m' = concat $ map (\m -> case m of
+                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damageBurning = 0.005 }))]
+                _ -> []) m in
         let v = interpolate (age e) 1.0 [(0.5, 1.0), (0.5, 0.5)] in
         let (x', y') = flamePosition e .+ (flameVelocity e .* (d * v)) in
         deltaStateNew {
@@ -43,6 +47,7 @@ instance Entity Flame where
                 flameVelocity = if not (null m) then (0, 0) else flameVelocity e,
                 flameRotation = flameRotation e + flameRotationSpeed e * d
                 }))],
+            deltaMessages = m',
             deltaSplatter = Just $ do
                 setSourceRGBA 0 0 0 0.03
                 rotate (flameRotation e)

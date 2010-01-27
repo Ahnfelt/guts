@@ -1,26 +1,26 @@
 module Damage where
 
 data Damage = Damage {
-    piercing :: Double,
-    burning :: Double,
-    freezing :: Double,
-    corrosive :: Double
+    damagePiercing :: Double,
+    damageBurning :: Double,
+    damageFreezing :: Double,
+    damageCorrosive :: Double
 }
 
 type DamageResistance = Damage
 
 damageHealth :: DamageResistance -> Damage -> Double
 damageHealth r d = (
-    (1 - piercing r) * piercing d +
-    (1 - burning r) * burning d +
-    (1 - freezing r) * freezing d + 
-    (1 - corrosive r) * corrosive d)
+    (1 - damagePiercing r) * damagePiercing d +
+    (1 - damageBurning r) * damageBurning d +
+    (1 - damageFreezing r) * damageFreezing d + 
+    (1 - damageCorrosive r) * damageCorrosive d)
 
 damageResistanceNew = damageNew
 
 damageNew = Damage { 
-    piercing = 0,
-    burning = 0,
-    freezing = 0,
-    corrosive = 0 }
+    damagePiercing = 0,
+    damageBurning = 0,
+    damageFreezing = 0,
+    damageCorrosive = 0 }
 

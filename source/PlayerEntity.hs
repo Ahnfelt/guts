@@ -4,6 +4,7 @@ import Control.Monad
 import System.Random
 import Data.Unique (Unique)
 import FlameEntity
+import Damage
 import GameState
 import KeyState
 import Mechanics
@@ -13,6 +14,7 @@ data Player = Player {
     playerPosition :: Position,
     playerAimAngle :: Angle,
     playerMoveAngle :: Angle,
+    playerHealth :: Double,
     playerKeys :: (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton),
     playerId :: Unique
 } deriving Show
@@ -23,13 +25,18 @@ playerNew p k = \i -> AbstractEntity $ Player {
     playerPosition = p,
     playerAimAngle = 0,
     playerMoveAngle = 0,
+    playerHealth = 1.0,
     playerKeys = k,
     playerId = i
     }
 
 instance Entity Player where
 
+    entityUpdate e s m r d | playerHealth e <= 0 = deltaStateNew
     entityUpdate e s m r d =
+        let damage = sum $ map (\m -> case m of
+                MessageDamage e' damage -> damageHealth (damageResistanceNew) damage
+                _ -> 0.0) m in
         let r1:r2:_ = randoms (mkStdGen r) in
         let k = stateKeys s in
         let (keyUp, keyDown, keyLeft, keyRight, keyPrimary, keySecondary) = playerKeys e in
@@ -49,12 +56,13 @@ instance Entity Player where
         let (ad, md) = if not k' then (0, 0) else 
                 if k keyPrimary || k keySecondary then (5, 80) else (10, 120) in
         let p' = p .+ velocity a' (md * d) in
-        let aa' = approximateAngle (ad * d) aa a in
+        let aa' = if k keyPrimary || k keySecondary then aa else approximateAngle (ad * d) aa a in
         let es = if k keyPrimary then [fireFlame p' aa' 0.30 r1] else [] in
         deltaStateNew { 
             deltaEntities = const (AbstractEntity (e { 
                 playerAimAngle = aa',
                 playerMoveAngle = a',
+                playerHealth = playerHealth e - damage,
                 playerPosition = p'})):es, 
             deltaSplatter = Just $ do
                 when k' $ do
