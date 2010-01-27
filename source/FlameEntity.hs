@@ -55,7 +55,7 @@ instance Entity Flame where
             deltaSplatter = Just $ do
                 setSourceRGBA 0 0 0 0.03
                 rotate (flameRotation e)
-                arc 0 10 10 0 (2 * pi)
+                arc 0 0 10 0 (2 * pi)
                 stroke
         }
     
