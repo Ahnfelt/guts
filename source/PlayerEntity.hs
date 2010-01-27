@@ -115,14 +115,17 @@ fireFlame p a s r =
 fireShotgun :: Position -> Angle -> Angle -> Int -> [(Unique -> AbstractEntity)]
 fireShotgun position angle spread seed =
     let (seed', generator) = random (mkStdGen seed) in
-    take 10 $ map (firePellet seed') (randoms generator)
+    let (seed'', generator') = random (mkStdGen seed') in
+    let (seed''', generator'') = random (mkStdGen seed'') in
+    take 40 $ map (firePellet seed''') $ zip3 (randoms generator) (randoms generator') (randoms generator'')
     where
-        firePellet seed multiplier =
-            let angle' = angle - 0.5 * spread + multiplier * spread in 
+        firePellet seed (speadRandom, speedRandom, timeToLiveRandom) =
+            let speadRandom' =1 - (log(1/speadRandom -1)+6)/12 in -- 1.0 / (1.0 + exp (-(speadRandom * 12 -6))) in
+            let angle' = angle - 0.5 * spread + speadRandom' * spread in 
             pelletNew 
                 (position .+ velocity angle' 20)
-                (velocity angle' 600)
+                (velocity angle' (500 + speedRandom * 100))
                 angle'
-                1.0
+                (0.3 + timeToLiveRandom * 0.3)
                 seed
 
