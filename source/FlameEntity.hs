@@ -3,6 +3,7 @@ import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
+import Layer
 import Damage
 import GameState
 import Mechanics
@@ -16,6 +17,7 @@ data Flame = Flame {
     flameAngle :: Angle,
     flameRotation :: Angle,
     flameRotationSpeed :: Angle,
+    flamePassive :: Bool,
     flameId :: Unique
 } deriving Show
 
@@ -29,6 +31,7 @@ flameNew p v a t r = let r1:_ = randoms (mkStdGen r) in \i -> AbstractEntity $ F
     flameAngle = a,
     flameRotation = 0,
     flameRotationSpeed = (3 - 6 * r1) * pi,
+    flamePassive = False,
     flameId = i}
 
 instance Entity Flame where
@@ -36,7 +39,7 @@ instance Entity Flame where
     entityUpdate e s m r d | flameTimeLeft e <= 0 = deltaStateNew
     entityUpdate e s m r d =
         let m' = concat $ map (\m -> case m of
-                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damageBurning = 0.005 }))]
+                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damageBurning = 0.02 }))]
                 _ -> []) m in
         let v = interpolate (age e) 1.0 [(0.5, 1.0), (0.5, 0.5)] in
         let (x', y') = flamePosition e .+ (flameVelocity e .* (d * v)) in
@@ -44,20 +47,21 @@ instance Entity Flame where
             deltaEntities = [const (AbstractEntity (e { 
                 flamePosition = (x', y'),
                 flameTimeLeft = flameTimeLeft e - d,
-                flameVelocity = if not (null m) then (0, 0) else flameVelocity e,
-                flameRotation = flameRotation e + flameRotationSpeed e * d
+                flameVelocity = if not (null m') then (0, 0) else flameVelocity e,
+                flameRotation = flameRotation e + flameRotationSpeed e * d,
+                flamePassive = if not (null m') then True else flamePassive e
                 }))],
             deltaMessages = m',
             deltaSplatter = Just $ do
                 setSourceRGBA 0 0 0 0.03
                 rotate (flameRotation e)
-                arc 0 10 10 0 (2 * pi)
+                arc 0 0 10 0 (2 * pi)
                 stroke
         }
     
     entityPosition e = Just (flamePosition e)
 
-    entityRadius e | age e < 0.9 = Just 1
+    entityRadius e | age e < 0.9 && not (flamePassive e) = Just 1
     entityRadius e = Nothing
 
     entityDraw e i = do
@@ -77,7 +81,7 @@ instance Entity Flame where
         setSourceSurface (i "flame3.png") (-25) (-25)
         paint
 
-    entityOnTop e = True
+    entityLayer e = LayerProjectile
 
     entityHitable e = False
 

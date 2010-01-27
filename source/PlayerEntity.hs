@@ -5,6 +5,7 @@ import System.Random
 import Data.Unique (Unique)
 import FlameEntity
 import PelletEntity
+import Layer
 import Damage
 import GameState
 import KeyState
@@ -17,8 +18,9 @@ data Player = Player {
     playerMoveAngle :: Angle,
     playerHealth :: Double,
     playerKeys :: (KeyButton, KeyButton, KeyButton, KeyButton, KeyButton, KeyButton),
-    playerId :: Unique,
-    playerShotgunInterval :: Interval
+    playerShotgunInterval :: Interval,
+    playerFlameInterval :: Interval,
+    playerId :: Unique
 } deriving Show
 
 -- (position, (up, down, left, right, primary, secondary))
@@ -29,8 +31,9 @@ playerNew p k = \i -> AbstractEntity $ Player {
     playerMoveAngle = 0,
     playerHealth = 1.0,
     playerKeys = k,
-    playerId = i,
-    playerShotgunInterval = intervalNew 0.8
+    playerShotgunInterval = intervalNew 0.80,
+    playerFlameInterval = intervalNew 0.03,
+    playerId = i
     }
 
 instance Entity Player where
@@ -60,7 +63,8 @@ instance Entity Player where
                 if k keyPrimary || k keySecondary then (5, 80) else (10, 120) in
         let p' = p .+ velocity a' (md * d) in
         let aa' = if k keyPrimary || k keySecondary then aa else approximateAngle (ad * d) aa a in
-        let es = if k keyPrimary then [fireFlame p' aa' 0.30 r1] else [] in
+        let (flameShots, flameInterval) = intervalsSince (playerFlameInterval e) d (k keyPrimary) in
+        let es = if k keyPrimary then take flameShots $ map (fireFlame p' aa' 0.30) rs else [] in
         let (shotgunShots, shotgunInterval) = intervalsSince (playerShotgunInterval e) d (k keySecondary) in
         let es' = if k keySecondary then concat $ take shotgunShots $ map (fireShotgun p' aa' 0.20) rs else [] in
         deltaStateNew { 
@@ -69,6 +73,7 @@ instance Entity Player where
                 playerMoveAngle = a',
                 playerHealth = playerHealth e - damage,
                 playerShotgunInterval = shotgunInterval,
+                playerFlameInterval = flameInterval,
                 playerPosition = p'})):es++es', 
             deltaSplatter = Just $ do
                 when k' $ do
@@ -94,7 +99,7 @@ instance Entity Player where
         lineTo 0 0
         fill
 
-    entityOnTop e = True
+    entityLayer e = LayerPlayer
     
     entityHitable e = True
 
