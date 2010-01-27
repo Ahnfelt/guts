@@ -62,7 +62,7 @@ instance Entity Player where
         let aa' = if k keyPrimary || k keySecondary then aa else approximateAngle (ad * d) aa a in
         let es = if k keyPrimary then [fireFlame p' aa' 0.30 r1] else [] in
         let (shotgunShots, shotgunInterval) = intervalsSince (playerShotgunInterval e) d (k keySecondary) in
-        let es' = if k keySecondary then concat $ take shotgunShots $ map (fireShotgun p' aa' 0.30) rs else [] in
+        let es' = if k keySecondary then concat $ take shotgunShots $ map (fireShotgun p' aa' 0.20) rs else [] in
         deltaStateNew { 
             deltaEntities = const (AbstractEntity (e { 
                 playerAimAngle = aa',
