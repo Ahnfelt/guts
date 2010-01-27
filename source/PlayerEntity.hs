@@ -65,7 +65,7 @@ instance Entity Player where
         let (flameShots, flameInterval) = intervalsSince (playerFlameInterval e) d (k keyPrimary) in
         let es = if k keyPrimary then take flameShots $ map (fireFlame p' aa' 0.30) rs else [] in
         let (shotgunShots, shotgunInterval) = intervalsSince (playerShotgunInterval e) d (k keySecondary) in
-        let es' = if k keySecondary then concat $ take shotgunShots $ map (fireShotgun p' aa' 0.30) rs else [] in
+        let es' = if k keySecondary then concat $ take shotgunShots $ map (fireShotgun p' aa' 0.20) rs else [] in
         deltaStateNew { 
             deltaEntities = const (AbstractEntity (e { 
                 playerAimAngle = aa',
