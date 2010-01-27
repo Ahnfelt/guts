@@ -10,6 +10,7 @@ import Data.Unique (Unique)
 import KeyState
 import Mechanics
 import Tile
+import Layer
 import Message
 
 data GameState = GameState {
@@ -45,7 +46,7 @@ class (Show a) => Entity a where
     -- Returns the current graphical representation of the entity
     entityDraw :: a -> (String -> Surface) -> Render ()
     -- Should this be drawn on top of items and such?
-    entityOnTop :: a -> Bool
+    entityLayer :: a -> Layer
     -- Non-hitables do not collide with each other (but can collide with hitables)
     entityHitable :: a -> Bool
     -- The identity of the entity
@@ -64,7 +65,7 @@ instance Entity AbstractEntity where
     entityRadius (AbstractEntity e) = entityRadius e
     entityHitable (AbstractEntity e) = entityHitable e
     entityDraw (AbstractEntity e) = entityDraw e
-    entityOnTop (AbstractEntity e) = entityOnTop e
+    entityLayer (AbstractEntity e) = entityLayer e
     entityId (AbstractEntity e) = entityId e
 
 instance Show AbstractEntity where

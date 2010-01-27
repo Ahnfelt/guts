@@ -5,6 +5,7 @@ import System.Random
 import Data.Unique (Unique)
 import FlameEntity
 import PelletEntity
+import Layer
 import Damage
 import GameState
 import KeyState
@@ -98,7 +99,7 @@ instance Entity Player where
         lineTo 0 0
         fill
 
-    entityOnTop e = True
+    entityLayer e = LayerPlayer
     
     entityHitable e = True
 

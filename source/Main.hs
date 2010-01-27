@@ -10,6 +10,8 @@ import Data.Array.Diff
 import Data.IORef
 import Data.Unique
 import Data.Maybe
+import Data.List (sortBy)
+import Data.Ord (comparing)
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified OutdoorPainter
@@ -169,8 +171,7 @@ updateGraphics gameState canvas backgroundSurface images debug = do
         setSourceSurface backgroundSurface (-x) (-y)
         paint
         let es = [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e]]
-        mapM_ (drawEntity images) [(e, x, y) | (e, x, y) <- es, not (entityOnTop e)]
-        mapM_ (drawEntity images) [(e, x, y) | (e, x, y) <- es, entityOnTop e]
+        mapM_ (drawEntity images) (sortBy (\(e, _, _) (e', _, _) -> comparing entityLayer e' e) es)
         when debug $ do
             mapM_ drawDebug [(e, x, y, r) | (e, x, y) <- es, Just r <- [entityRadius e]]
     drawWindowEndPaint drawable

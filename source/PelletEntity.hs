@@ -3,6 +3,7 @@ import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
+import Layer
 import Damage
 import GameState
 import Mechanics
@@ -59,7 +60,7 @@ instance Entity Pellet where
         lineTo 7 0
         stroke
 
-    entityOnTop e = True
+    entityLayer e = LayerProjectile
 
     entityHitable e = False
 

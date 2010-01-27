@@ -3,6 +3,7 @@ import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
+import Layer
 import Damage
 import GameState
 import Mechanics
@@ -80,7 +81,7 @@ instance Entity Flame where
         setSourceSurface (i "flame3.png") (-25) (-25)
         paint
 
-    entityOnTop e = True
+    entityLayer e = LayerProjectile
 
     entityHitable e = False
 
