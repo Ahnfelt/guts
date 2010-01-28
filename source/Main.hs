@@ -24,13 +24,46 @@ import Message
 import Tile
 import PlayerEntity
 
-ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
+--ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
+
+ascii = [
+    "************************************************************",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*           `             `                                *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                bbbbbb                                    *",
+    "*                bbbbbb            ****                    *",
+    "*                bbbbbb           *** *                    *",
+    "*                bbbbbb             ****                   *",
+    "*              b bbbbbb               *                    *",
+    "*          `   b   b                                       *",
+    "*             bbbb b bbb                                   *",
+    "*                bbb   b                ```                *",
+    "*                b b b b             ```````               *",
+    "*           *            `             ``                  *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                      `                                   *",
+    "*            *                                             *",
+    "*                                         `                *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "************************************************************"
+    ]
 
 painterGenerators = [
     OutdoorPainter.rockPainter,
     OutdoorPainter.grassPainter (tileLike OutdoorGrass) 0.5,
-    BasePainter.blockPainter,
-    OutdoorPainter.grassPainter (tileLike OutdoorBush) 0.8]
+    OutdoorPainter.grassPainter (tileLike OutdoorBush) 0.8,
+    BasePainter.blockPainter]
 
 main :: IO ()
 main = do
