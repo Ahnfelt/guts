@@ -62,7 +62,7 @@ instance Entity Player where
         let (ad, md) = if not k' then (0, 0) else 
                 if k keyPrimary || k keySecondary then (5, 80) else (10, 120) in
         let p' = p .+ velocity a' (md * d) in
-        let aa' = if k keyPrimary || k keySecondary then aa else approximateAngle (ad * d) aa a in
+        let aa' = approximateAngle (ad * d) aa a in
         let (flameShots, flameInterval) = intervalsSince (playerFlameInterval e) d (k keyPrimary) in
         let es = if k keyPrimary then take flameShots $ map (fireFlame p' aa' 0.30) rs else [] in
         let (shotgunShots, shotgunInterval) = intervalsSince (playerShotgunInterval e) d (k keySecondary) in
