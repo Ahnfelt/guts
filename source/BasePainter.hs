@@ -11,7 +11,7 @@ blockPainter s = do
         _ -> return ()
 
 paintBlock t (tn, ts, tw, te) ts2 x y s = do
-    drawShadow x y tileWidth tileHeight (like tn) (like tw) 2 2
+    drawShadow x y tileWidth tileHeight (like tn) (like tw) 5 5
     setLineWidth 1.5
     setSourceRGB 0.28 0.28 0.28
     rectangle (fromIntegral x + 1) (fromIntegral y + 1) (fromIntegral tileWidth - 1 * 2) (fromIntegral tileHeight - 1 * 2)

@@ -8,6 +8,7 @@ import Damage
 import GameState
 import Mechanics
 import Message
+import Tile
 
 data Pellet = Pellet { 
     pelletPosition :: Position,
@@ -35,9 +36,10 @@ instance Entity Pellet where
         let m' = concat $ map (\m -> case m of
                 MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damagePiercing = 0.02 }))]
                 _ -> []) m in
-        let (x', y') = pelletPosition e .+ (pelletVelocity e .* d) in
+        let position = pelletPosition e in
+        let position' = position .+ (pelletVelocity e .* d) in
         let newEntities = if not $ null m' then [] else [const (AbstractEntity (e { 
-                pelletPosition = (x', y'),
+                pelletPosition = moveToward (stateMap s) position position',
                 pelletTimeLeft = pelletTimeLeft e - d
                 }))] in 
         deltaStateNew {

@@ -11,6 +11,7 @@ import GameState
 import KeyState
 import Mechanics
 import Message
+import Tile
 
 data Player = Player { 
     playerPosition :: Position,
@@ -74,7 +75,7 @@ instance Entity Player where
                 playerHealth = playerHealth e - damage,
                 playerShotgunInterval = shotgunInterval,
                 playerFlameInterval = flameInterval,
-                playerPosition = p'})):es++es', 
+                playerPosition = moveToward (stateMap s) p p'})):es++es', 
             deltaSplatter = Just $ do
                 when k' $ do
                     rotate (playerAimAngle e)
@@ -129,7 +130,7 @@ fireShotgun position angle spread seed =
             let angle' = angle - 0.5 * spread + speadRandom' * spread in 
             pelletNew 
                 (position .+ velocity angle' 20)
-                (velocity angle' (500 + speedRandom * 100))
+                (velocity angle' (1600 + speedRandom * 150))
                 angle'
                 (0.3 + timeToLiveRandom * 0.3)
                 seed

@@ -3,11 +3,13 @@ module Tile (
     TileLike (..), tileSolid, tileWidth, tileHeight, 
     TilePainter, TileMap, tileMapEmpty, tileMap, 
     tileAt, tileGet, tileSet, 
-    tileCoordinates, tileMapWidth, tileMapHeight
+    tileCoordinates, tileMapWidth, tileMapHeight,
+    moveToward
     ) where
 import Graphics.Rendering.Cairo (Render)
 import Data.Array.Diff
 import Data.List
+import Mechanics
 
 tileWidth = 32
 tileHeight = 32
@@ -35,7 +37,8 @@ data Tile
 
 -- Determines wether or not a tile is solid
 tileSolid :: Tile -> Bool
-tileSolid t = tileLike [OutdoorTree, OutdoorLake] t || tileLike [BaseWall] t
+tileSolid t = tileLike [OutdoorTree, OutdoorLake, OutdoorBush] t 
+    || tileLike [BaseWall, BaseBlock] t
 
 -- Determines whether or not a tile is the same as another modulo revealing
 class TileLike a where
@@ -84,8 +87,8 @@ tileMap :: [[Char]] -> TileMap
 tileMap l = TileMap $ listArray ((0, 0), (length (head l) - 1, length l - 1)) (map tile $ concat $ transpose l)
     where
         tile 'b' = TileBase BaseBlock
-        tile '*' = TileOutdoor OutdoorGrass
-        tile ' ' = TileOutdoor OutdoorBush
+        tile ' ' = TileOutdoor OutdoorGrass
+        tile '*' = TileOutdoor OutdoorBush
         tile '`' = TileOutdoor OutdoorRock
         tile _ = TileOutdoor OutdoorRock
 
@@ -100,6 +103,14 @@ tileMapHeight (TileMap a) = 1 + (snd $ snd $ bounds a)
 tileCoordinates :: TileMap -> [(Int, Int)]
 tileCoordinates (TileMap a) = indices a
 
+tileCoordinate :: Position -> (Int, Int)
+tileCoordinate (x, y) = (truncate x `div` tileWidth, truncate y `div` tileHeight)
+
 tileAt :: TileMap -> Int -> Int -> Tile
 tileAt m x y = tileGet m (x `div` tileWidth) (y `div` tileHeight)
+
+moveToward :: TileMap -> Position -> Position -> Position
+moveToward m from to = 
+    let (x, y) = tileCoordinate to
+    in if tileSolid (tileGet m x y) then from else to
 
