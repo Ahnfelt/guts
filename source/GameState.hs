@@ -5,7 +5,7 @@ module GameState (
     AbstractEntity (..),
     Entity (..),
     EntityMonad, executeEntityMonad, newEntityData,
-    EntityAny (..)
+    EntityAny (..), entityUpdater
     ) where
 import Graphics.Rendering.Cairo (Render, Surface)
 import System.Random
@@ -170,6 +170,9 @@ class (Show a) => Entity a where
     entityHitable :: a -> Bool
     -- The identity of the entity
     entityId :: a -> Unique
+
+-- Perform all the monad bookkeeping (entityUpdate = entityUpdater $ do ...)
+entityUpdater f e s m r d = executeEntityMonad (newEntityData s m (mkStdGen r) e) (f d)
 
 -- This is to be able to store different kinds of entities in lists.
 -- When you make functions to work at entities, please use 

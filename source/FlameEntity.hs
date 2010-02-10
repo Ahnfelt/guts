@@ -38,8 +38,7 @@ instance EntityAny Flame
 
 instance Entity Flame where
 
-    entityUpdate e s m r d | flameTimeLeft e <= 0 = deltaStateNew (AbstractEntity e)
-    entityUpdate e s m r d = executeEntityMonad (newEntityData s m (mkStdGen r) e) $ do
+    entityUpdate = entityUpdater $ \d -> do
         receive $ do
             MessageCollide <- message
             reply $ MessageDamage $ damageNew { damageBurning = 0.02 }
@@ -55,6 +54,9 @@ instance Entity Flame where
             flameTimeLeft = flameTimeLeft e - d,
             flameRotation = flameRotation e + flameRotationSpeed e * d
         }
+        e <- self
+        when (flameTimeLeft e <= 0) $ do
+            vanish
     
     entityPosition e = Just (flamePosition e)
 

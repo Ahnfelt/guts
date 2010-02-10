@@ -41,8 +41,7 @@ instance EntityAny Player
 
 instance Entity Player where
 
-    entityUpdate e s m r d | playerHealth e <= 0 = deltaStateNew (AbstractEntity e)
-    entityUpdate e s m r d = executeEntityMonad (newEntityData s m (mkStdGen r) e) $ do
+    entityUpdate = entityUpdater $ \d -> do
         receive $ do
             MessageDamage d <- message
             let d' = damageHealth damageResistanceNew d
@@ -86,6 +85,9 @@ instance Entity Player where
             playerShotgunInterval = shotgunInterval,
             playerPosition = newPosition
         }
+        e <- self
+        when (playerHealth e <= 0) $ do
+            vanish
 
     entityPosition e = Just (playerPosition e)
 

@@ -33,8 +33,7 @@ instance EntityAny Pellet
 
 instance Entity Pellet where
 
-    entityUpdate e s m r d | pelletTimeLeft e <= 0 = deltaStateNew (AbstractEntity e)
-    entityUpdate e s m r d = executeEntityMonad (newEntityData s m (mkStdGen r) e) $ do
+    entityUpdate = entityUpdater $ \d -> do
         receive $ do
             MessageCollide <- message
             reply $ MessageDamage $ damageNew { damagePiercing = 0.02 }
@@ -43,9 +42,12 @@ instance Entity Pellet where
         let position = pelletPosition e
         let position' = position .+ (pelletVelocity e .* d)
         change $ \e -> e {
-            pelletPosition = moveToward (stateMap s) position position',
+            pelletPosition = position',
             pelletTimeLeft = pelletTimeLeft e - d
         }
+        e <- self
+        when (pelletTimeLeft e <= 0) $ do
+            vanish
     
     entityPosition e = Just (pelletPosition e)
 
