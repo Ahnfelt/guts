@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances, 
   MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances #-}
-module CollisionTest where
+module Main where
 
 import Graphics.UI.Gtk  hiding (fill)
 import Graphics.Rendering.Cairo
@@ -43,13 +43,14 @@ test3 = do
   window a b c d r
 
 testRandom :: IO ()
-testRandom = do
-  (a, b, c, d, r) <- liftM5 (,,,,) v v v v s
+testRandom = forever $ do
+  (a, b, c, d, r) <- liftM5 (,,,,) v v v v (getStdRandom (randomR (0.05, 0.2)))
   window a b c d r
   where
     s = getStdRandom (randomR (0,1))
     v = liftM2 (,) s s
   
+-- Intersection between two parametirc lines. 
 intersection :: VectorD -> VectorD -> VectorD -> VectorD -> VectorD
 intersection (px, py) (vx, vy) q@(qx, qy) u@(ux, uy) =
     let z = vy / (uy*vx)
@@ -66,7 +67,12 @@ segmentCircleCollision a b c d r =
       i1 = i .-. norm u *. delta
       h = r / sin phi
       i2 = i .-. norm v *. h
-  in Just (i1, i2)
+  in if pointBoxCollision i2 (c, d) then Just (i1, i2) else Nothing
+  
+pointBoxCollision :: VectorD -> (VectorD, VectorD) -> Bool
+pointBoxCollision (x, y) ((x1, y1), (x2, y2)) =
+    ((x >= x1 && x <= x2) || (x <= x1 && x >= x2)) && 
+    ((y >= y1 && y <= y2) || (y <= y1 && y >= y2))
 
 drawCollision :: Double -> VectorD -> VectorD -> VectorD -> 
                  VectorD -> Double -> Render ()
@@ -74,15 +80,14 @@ drawCollision w a b c d r = do
   let v = d .-. c
   let u = b .-. a
   let i = intersection a u d v
-  let Just (i1, i2) = segmentCircleCollision a b c d r
 
   -- Background
   setSourceRGB 0.8 0.8 0.8
   paint
 
-  -- Circle
-  setSourceRGB 0.9 0.9 0.9
-  circle i2 r
+  -- Init Circle
+  setSourceRGBA 1 1 0.7 0.3
+  circle c r
 
   -- Line segment
   setSourceRGB 0.7 0.8 0.7
@@ -104,13 +109,18 @@ drawCollision w a b c d r = do
   setSourceRGB 1 1 0
   crossFixed i 8
 
-  -- Entity collision point (Circle center)
-  setSourceRGB 0.8 0 0
-  crossFixed i2 8
-
-  -- Line segment collision point
-  setSourceRGB 0.2 1 0.2
-  crossFixed i1 8
+  case segmentCircleCollision a b c d r of
+    Just (i1, i2) -> do 
+      -- Circle
+      setSourceRGBA 1 0.6 0.6 0.5
+      circle i2 r
+      -- Entity collision point (Circle center)
+      setSourceRGB 0.8 0 0
+      crossFixed i2 8
+      -- Line segment collision point
+      setSourceRGB 0.2 1 0.2
+      crossFixed i1 8
+    Nothing -> return ()
 
     where
       mod f = uncurry f . (*. w)
