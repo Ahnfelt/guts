@@ -34,30 +34,29 @@ flameNew p v a t r = let r1:_ = randoms (mkStdGen r) in \i -> AbstractEntity $ F
     flamePassive = False,
     flameId = i}
 
+instance EntityAny Flame
+
 instance Entity Flame where
 
-    entityUpdate e s m r d | flameTimeLeft e <= 0 = deltaStateNew
-    entityUpdate e s m r d =
-        let m' = concat $ map (\m -> case m of
-                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damageBurning = 0.02 }))]
-                _ -> []) m in
-        let v = interpolate (age e) 1.0 [(0.5, 1.0), (0.5, 0.5)] in
-        let (x', y') = flamePosition e .+ (flameVelocity e .* (d * v)) in
-        deltaStateNew {
-            deltaEntities = [const (AbstractEntity (e { 
-                flamePosition = (x', y'),
-                flameTimeLeft = flameTimeLeft e - d,
-                flameVelocity = if not (null m') then (0, 0) else flameVelocity e,
-                flameRotation = flameRotation e + flameRotationSpeed e * d,
-                flamePassive = if not (null m') then True else flamePassive e
-                }))],
-            deltaMessages = m',
-            deltaSplatter = Just $ do
-                setSourceRGBA 0 0 0 0.03
-                rotate (flameRotation e)
-                arc 0 0 10 0 (2 * pi)
-                stroke
+    entityUpdate = entityUpdater $ \d -> do
+        receive $ do
+            MessageCollide <- message
+            reply $ MessageDamage $ damageNew { damageBurning = 0.02 }
+            change $ \e -> e {
+                flameVelocity = (0, 0),
+                flamePassive = True
+            }
+        e <- self
+        let v = interpolate (age e) 1.0 [(0.5, 1.0), (0.5, 0.5)]
+        let (x', y') = flamePosition e .+ (flameVelocity e .* (d * v))
+        change $ \e -> e {
+            flamePosition = (x', y'),
+            flameTimeLeft = flameTimeLeft e - d,
+            flameRotation = flameRotation e + flameRotationSpeed e * d
         }
+        e <- self
+        when (flameTimeLeft e <= 0) $ do
+            vanish
     
     entityPosition e = Just (flamePosition e)
 

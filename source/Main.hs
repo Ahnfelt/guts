@@ -62,7 +62,7 @@ ascii = [
 painterGenerators = [
     OutdoorPainter.rockPainter,
     OutdoorPainter.grassPainter (tileLike OutdoorGrass) 0.5,
-    OutdoorPainter.grassPainter (tileLike OutdoorBush) 0.8,
+    OutdoorPainter.grassPainter (tileLike OutdoorBush) 1.0,
     BasePainter.blockPainter]
 
 main :: IO ()
@@ -117,11 +117,11 @@ main = do
     i2 <- newUnique
     let p1 = playerNew 
             (500, 200) 
-            ("Up", "Down", "Left", "Right", "Shift_R", "Return")
+            ["Up", "Down", "Left", "Right", "Shift_R", "Return"]
             i1
     let p2 = playerNew 
             (200, 200) 
-            ("e", "d", "s", "f", "a", "q")
+            ["e", "d", "s", "f", "a", "q"]
             i2
     let s = GameState { 
         stateEntities = [AbstractEntity p1, AbstractEntity p2], 
@@ -157,7 +157,7 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
                 i <- newUnique
                 return (e i)
             let s'' = s' { stateEntities = es'' }
-            let m' = concat $ map deltaMessages (map snd us)
+            let m' = concat $ map (\e -> [(e', (deltaSelf e, m)) | (e', m) <- deltaMessages e]) (map snd us)
             let m'' = collisions es''
             let m''' = messageMap (m'' ++ m')
             renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
@@ -166,7 +166,7 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
             loop t' s'' m'''
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
-    collisions es =  [(entityId e1, MessageCollide e2) | 
+    collisions es =  [(entityId e1, (e2, MessageCollide)) | 
         e1 <- es, e2 <- es,
         entityHitable e1 || entityHitable e2,
         entityId e1 /= entityId e2,

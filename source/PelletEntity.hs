@@ -20,8 +20,8 @@ data Pellet = Pellet {
 } deriving Show
 
 -- (position, velocity, angle, timeToLive, seed)
-pelletNew :: Position -> Velocity -> Angle -> Duration -> Int -> (Unique -> AbstractEntity)
-pelletNew p v a t r = {-let r1:_ = randoms (mkStdGen r) in-} \i -> AbstractEntity $ Pellet {
+pelletNew :: Position -> Velocity -> Angle -> Duration -> (Unique -> AbstractEntity)
+pelletNew p v a t = \i -> AbstractEntity $ Pellet {
     pelletPosition = p,
     pelletVelocity = v,
     pelletTime = t,
@@ -29,23 +29,25 @@ pelletNew p v a t r = {-let r1:_ = randoms (mkStdGen r) in-} \i -> AbstractEntit
     pelletAngle = a,
     pelletId = i}
 
+instance EntityAny Pellet
+
 instance Entity Pellet where
 
-    entityUpdate e s m r d | pelletTimeLeft e <= 0 = deltaStateNew
-    entityUpdate e s m r d =
-        let m' = concat $ map (\m -> case m of
-                MessageCollide e' -> [(entityId e', MessageDamage (AbstractEntity e) (damageNew { damagePiercing = 0.02 }))]
-                _ -> []) m in
-        let position = pelletPosition e in
-        let position' = position .+ (pelletVelocity e .* d) in
-        let newEntities = if not $ null m' then [] else [const (AbstractEntity (e { 
-                pelletPosition = moveToward (stateMap s) position position',
-                pelletTimeLeft = pelletTimeLeft e - d
-                }))] in 
-        deltaStateNew {
-            deltaEntities = newEntities,
-            deltaMessages = m'
+    entityUpdate = entityUpdater $ \d -> do
+        receive $ do
+            MessageCollide <- message
+            reply $ MessageDamage $ damageNew { damagePiercing = 0.02 }
+            vanish
+        e <- self
+        let position = pelletPosition e
+        let position' = position .+ (pelletVelocity e .* d)
+        change $ \e -> e {
+            pelletPosition = position',
+            pelletTimeLeft = pelletTimeLeft e - d
         }
+        e <- self
+        when (pelletTimeLeft e <= 0) $ do
+            vanish
     
     entityPosition e = Just (pelletPosition e)
 
