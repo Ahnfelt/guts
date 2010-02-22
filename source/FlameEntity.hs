@@ -1,4 +1,4 @@
-module FlameEntity (flameNew) where
+module FlameEntity (spawnFlame) where
 import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
@@ -19,20 +19,42 @@ data Flame = Flame {
     flameRotationSpeed :: Angle,
     flamePassive :: Bool,
     flameId :: Unique
+    --flameActor :: Actor
 } deriving Show
 
--- (position, velocity, angle, timeToLive, seed)
-flameNew :: Position -> Velocity -> Angle -> Duration -> Int -> (Unique -> AbstractEntity)
-flameNew p v a t r = let r1:_ = randoms (mkStdGen r) in \i -> AbstractEntity $ Flame {
-    flamePosition = p,
-    flameVelocity = v,
-    flameTime = t,
-    flameTimeLeft = t,
-    flameAngle = a,
-    flameRotation = 0,
-    flameRotationSpeed = (3 - 6 * r1) * pi,
-    flamePassive = False,
-    flameId = i}
+-- (position, velocity, angle, timeToLive)
+spawnFlame :: EntityAny e => Position -> Velocity -> Angle -> Duration -> EntityMonad k e ()
+spawnFlame p v a t = do
+    {-
+    r1 <- randomDouble
+    let (ds, [markInterval]) = actorIntervalsNew [0.3]
+    spawn $ \u -> AbstractEntity $ Flame {
+        flameAngle = a,
+        flameRotation = 0,
+        flameRotationSpeed = (3 - 6 * r1) * pi,
+        flamePassive = False,
+        flameMarkInterval = markInterval
+        flameActor = actorNew u p v t ds
+    }
+    -}    
+    r1 <- randomDouble
+    spawn $ \i -> AbstractEntity $ Flame {
+        flamePosition = p,
+        flameVelocity = v,
+        flameTime = t,
+        flameTimeLeft = t,
+        flameAngle = a,
+        flameRotation = 0,
+        flameRotationSpeed = (3 - 6 * r1) * pi,
+        flamePassive = False,
+        flameId = i
+    }
+
+{-
+instance EntityActor Flame where
+    actorGet e = flameActor e
+    actorSet e a = e { flameActor = a }
+-}
 
 instance EntityAny Flame
 

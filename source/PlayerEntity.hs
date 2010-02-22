@@ -114,12 +114,11 @@ fireFlame position angle spread = do
     positionRandom <- randomDouble
     spreadRandom <- randomDouble
     velocityRandom <- randomDouble
-    spawn $ flameNew 
+    spawnFlame
         (position .+ velocity angle (20 + 5 * positionRandom))
         (velocity (angle - 0.5 * spread + spreadRandom * spread) (100 + velocityRandom * 50) .* 1.5)
         angle
         1.0
-        42
 
 fireShotgun :: (EntityAny e) => Position -> Angle -> Angle -> EntityMonad k e ()
 fireShotgun position angle spread = replicateM_ 40 $ do
@@ -128,7 +127,7 @@ fireShotgun position angle spread = replicateM_ 40 $ do
     timeToLiveRandom <- randomDouble
     let spreadRandom' = 1 - (log(1 / spreadRandom - 1) + 6) / 12
     let angle' = angle - 0.5 * spread + spreadRandom' * spread
-    spawn $ pelletNew 
+    spawnPellet
         (position .+ velocity angle' 20)
         (velocity angle' (600 + speedRandom * 150))
         angle'

@@ -1,4 +1,4 @@
-module PelletEntity (pelletNew) where
+module PelletEntity (spawnPellet) where
 import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
@@ -19,15 +19,17 @@ data Pellet = Pellet {
     pelletId :: Unique
 } deriving Show
 
--- (position, velocity, angle, timeToLive, seed)
-pelletNew :: Position -> Velocity -> Angle -> Duration -> (Unique -> AbstractEntity)
-pelletNew p v a t = \i -> AbstractEntity $ Pellet {
-    pelletPosition = p,
-    pelletVelocity = v,
-    pelletTime = t,
-    pelletTimeLeft = t,
-    pelletAngle = a,
-    pelletId = i}
+-- (position, velocity, angle, timeToLive)
+spawnPellet :: EntityAny e => Position -> Velocity -> Angle -> Duration -> EntityMonad k e ()
+spawnPellet p v a t = do
+    spawn $ \i -> AbstractEntity $ Pellet {
+        pelletPosition = p,
+        pelletVelocity = v,
+        pelletTime = t,
+        pelletTimeLeft = t,
+        pelletAngle = a,
+        pelletId = i
+    }
 
 instance EntityAny Pellet
 

@@ -4,8 +4,7 @@ module GameState (
     DeltaState (..), deltaStateNew,
     AbstractEntity (..),
     Entity (..),
-    EntityMonad, executeEntityMonad, newEntityData,
-    EntityAny (..), entityUpdater
+    EntityMonad, EntityAny (..), entityUpdater
     ) where
 import Graphics.Rendering.Cairo (Render, Surface)
 import System.Random
@@ -58,15 +57,17 @@ data (Entity e) => EntityData e = EntityData {
     dataMessages :: [(AbstractEntity, Message)],
     dataState :: GameState,
     dataDelta :: DeltaState,
+    dataPassed :: Duration,
     dataRandom :: StdGen,
     dataKeepAlive :: Bool,
     dataSelf :: e
 }
 
-newEntityData s m r e = EntityData {
+newEntityData s m r d e = EntityData {
     dataMessages = m,
     dataState = s,
     dataDelta = deltaStateNew undefined,
+    dataPassed = d,
     dataRandom = r,
     dataKeepAlive = True,
     dataSelf = e
@@ -152,6 +153,11 @@ class Entity e => EntityAny e where
     pressed b = do
         (_, EntityData { dataState = GameState { stateKeys = f } }) <- get
         return (f b)
+        
+    timePassed :: EntityMonad k e Duration
+    timePassed = do
+        (_, a) <- get
+        return (dataPassed a)
 
 -- The type class for players, monsters, items, particles, etc.
 class (Show a) => Entity a where
@@ -172,7 +178,7 @@ class (Show a) => Entity a where
     entityId :: a -> Unique
 
 -- Perform all the monad bookkeeping (entityUpdate = entityUpdater $ do ...)
-entityUpdater f e s m r d = executeEntityMonad (newEntityData s m (mkStdGen r) e) (f d)
+entityUpdater f e s m r d = executeEntityMonad (newEntityData s m (mkStdGen r) d e) (f d)
 
 -- This is to be able to store different kinds of entities in lists.
 -- When you make functions to work at entities, please use 
