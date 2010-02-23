@@ -1,12 +1,10 @@
-module CollisionTest where
+module Main where
 
 import Graphics.UI.Gtk  hiding (fill)
 import Graphics.Rendering.Cairo
 import Random
 import Control.Monad
 import Data.Maybe
-import Data.List
-import Data.Ord
 
 import Mechanics
 import Collision
@@ -114,8 +112,8 @@ window a b s v r = do
 drawCollision :: Double -> Vector -> Vector -> Vector -> 
                  Vector -> Double -> Render ()
 drawCollision w a b c d r = do
-    let u = b .-. a
-    let v = d .-. c
+    let u = b .- a
+    let v = d .- c
     let i = intersection a u d v
 
     -- Background
@@ -128,13 +126,13 @@ drawCollision w a b c d r = do
 
     -- Static Line segment
     setSourceRGB 0.7 0.8 0.7
-    line (a .-. u *. 5) (b .+. u *. 5)
+    line (a .- u .* 5) (b .+ u .* 5)
     setSourceRGB 0 0.6 0
     line a b
 
     -- Move indication line
     setSourceRGB 0.7 0.7 0.8
-    line (c .-. v *. 5) (d .+. v *. 5)
+    line (c .- v .* 5) (d .+ v .* 5)
     setSourceRGB 0 0 0.6
     line c d
     setSourceRGB 0.2 0.2 0.2
@@ -170,7 +168,7 @@ drawCollision w a b c d r = do
     
 
     where
-      mod f = uncurry f . (*. w)
+      mod f = uncurry f . (.* w)
       circleFixed :: Vector -> Double -> Render ()
       circleFixed p r = do
         mod arc p r 0 (2 * pi)

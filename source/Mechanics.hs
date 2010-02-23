@@ -13,11 +13,6 @@ type Duration = Double
 velocity :: Angle -> Magnitude -> Velocity
 velocity a m = (cos a * m, sin a * m)
 
--- Operators for 2d vectors
-(.+) :: Vector -> Vector -> Vector
-(.+) (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
-(.*) :: Vector -> Magnitude -> Vector
-(.*) (x, y) m = (x * m, y * m)
 
 -- Approximate an angle a' from a, taking 1/d iterations to turn a full circle
 approximateAngle :: Duration -> Angle -> Angle -> Angle
@@ -52,33 +47,29 @@ intervalsSince (Interval length accumulated) deltaTime False =
 --- Vector stuff
 -----------------------
 
--- Vector addition
-(.+.) :: Vector -> Vector -> Vector
-(a, b) .+. (c, d) = (a + c, b + d)
+-- Operators for 2d vectors
+(.+) :: Vector -> Vector -> Vector
+(x1, y1) .+ (x2, y2) = (x1 + x2, y1 + y2)
 
--- Vector Substraction
-(.-.) :: Vector -> Vector -> Vector
-(a, b) .-. (c, d) = (a - c, b - d)
+(.-) :: Vector -> Vector -> Vector
+(a, b) .- (c, d) = (a - c, b - d)
 
--- Vector-scalar multiplication
-(*.) :: Vector -> Double -> Vector
-(a, b) *. d = (a*d, b*d)
+(.*) :: Vector -> Magnitude -> Vector
+(x, y) .* s = (x * s, y * s)
 
--- Vector-scalar division
-(/.) :: Vector -> Double -> Vector
-(a, b) /. d = (a/d, b/d)
+(./) :: Vector -> Double -> Vector
+(a, b) ./ d = (a/d, b/d)
 
-infixl 6 .+.
-infixl 6 .-.
-infixr 7 *.
-infixr 7 /.
-
+infixl 6 .+
+infixl 6 .-
+infixr 7 .*
+infixr 7 ./
 
 vectorLength :: Vector -> Double
 vectorLength (a,b) = sqrt (a*a + b*b)
 
 norm :: Vector -> Vector
-norm v = v /. vectorLength v
+norm v = v ./ vectorLength v
 
 dot :: Vector -> Vector -> Double
 dot (a, b) (c, d) = a*c + b*d

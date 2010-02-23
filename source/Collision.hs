@@ -10,8 +10,8 @@ import Mechanics
 -- ab is the static line segment and cd is the movement. r is radius.
 segmentCircleCollision :: Vector -> Vector -> Vector -> Vector -> Double -> Maybe (Vector, Vector)
 segmentCircleCollision a b c d r =
-  let u = b .-. a
-      v = d .-. c
+  let u = b .- a
+      v = d .- c
       (i1, i2) = lineCircleCollision a u c v r
       p1 = pointCircleCollision a c v r
       p2 = pointCircleCollision b c v r
@@ -35,9 +35,9 @@ lineCircleCollision p u q v r =
   let i = intersection p u q v
       phi = angle u v 
       delta = r / tan phi
-      i1 = i .-. norm u *. delta
+      i1 = i .- norm u .* delta
       h = r / sin phi
-      i2 = i .-. norm v *. h
+      i2 = i .- norm v .* h
   in (i1, i2)
 
 -- point (p+tv) radius
@@ -48,7 +48,7 @@ pointCircleCollision (ax, ay) p@(px, py) v@(vx, vy) r =
         c = (px - ax)^2 + (py - ay)^2 - r^2
         d = b^2 - 4*a*c
         t = (b - sqrt d) / (2 * a)
-    in if d >= 0 && a /= 0 then Just ((ax, ay), p .+. (v *. t)) else Nothing
+    in if d >= 0 && a /= 0 then Just ((ax, ay), p .+ (v .* t)) else Nothing
 
 
 pointBoxCollision :: Vector -> (Vector, Vector) -> Bool
@@ -61,7 +61,7 @@ intersection :: Vector -> Vector -> Vector -> Vector -> Vector
 intersection (px, py) (vx, vy) q@(qx, qy) u@(ux, uy) =
     let z = vy / (uy*vx)
         t2 = ((py - qy)/uy + (qx - px)*z) / (1 - z*ux)
-    in q .+. (u *. t2)
+    in q .+ (u .* t2)
 
 squaredDistance :: Vector -> Vector -> Double
 squaredDistance (ax, ay) (bx, by) = (ax - bx)^2 + (ay - by)^2
