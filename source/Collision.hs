@@ -44,10 +44,15 @@ lineCircleCollision p u q v r =
 pointCircleCollision :: Vector -> Vector -> Vector -> Double -> Maybe (Vector, Vector)
 pointCircleCollision (ax, ay) p@(px, py) v@(vx, vy) r = 
     let a = vx^2 + vy^2
-        b = -2 * (vx * (px - ax) + vy * (py - ay))
+        b = 2 * (vx * (px - ax) + vy * (py - ay))
         c = (px - ax)^2 + (py - ay)^2 - r^2
         d = b^2 - 4*a*c
-        t = (b - sqrt d) / (2 * a)
+        -- This solving method (based on the sign of b) is used to preserve 
+        -- precision in the case where the value of b is close to that of sqrt d
+        t = if b > 0 then (-b - sqrt d) / (2 * a) 
+                     else let t1 = (-b + sqrt d) / (2 * a) 
+                          in c / (a*t1)
+        --t = (-b - sqrt d) / (2 * a)
     in if d >= 0 && a /= 0 then Just ((ax, ay), p .+ (v .* t)) else Nothing
 
 

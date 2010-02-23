@@ -4,7 +4,7 @@ module Tile (
     TilePainter, TileMap, tileMapEmpty, tileMap, 
     tileAt, tileGet, tileSet, 
     tileCoordinates, tileMapWidth, tileMapHeight,
-    moveToward
+    moveToward, solidEdges
     ) where
 import Graphics.Rendering.Cairo (Render)
 import Data.Array.Diff
@@ -113,4 +113,27 @@ moveToward :: TileMap -> Position -> Position -> Position
 moveToward m from to = 
     let (x, y) = tileCoordinate to
     in if tileSolid (tileGet m x y) then from else to
+    
+    
+solidEdges :: TileMap -> [LineSegment]
+solidEdges m = 
+    let cs = tileCoordinates m
+        cs' = filter (tileSolid . uncurry (tileGet m)) cs
+        tileEdges (x, y) = [((x, y), (x+1, y)), ((x, y+1), (x+1, y+1)), ((x, y), (x, y+1)), ((x+1, y), (x+1, y+1))]
+        es = concat $ map tileEdges cs'
+    in map scaleSegment es
+    
+-- Convert a point from tile- to world coordinates.
+scalePosition :: (Int, Int) -> Vector
+scalePosition (x, y) = (scaleX x, scaleY y)
+
+scaleSegment :: ((Int, Int) ,(Int, Int)) -> LineSegment
+scaleSegment (p1, p2) = (scalePosition p1, scalePosition p2)
+
+scaleX :: Int -> Double
+scaleX x = fromIntegral (tileWidth * x)
+
+scaleY :: Int -> Double
+scaleY y = fromIntegral (tileHeight * y)
+
 

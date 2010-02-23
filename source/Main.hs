@@ -127,7 +127,8 @@ main = do
         stateEntities = [AbstractEntity p1, AbstractEntity p2], 
         stateMap = world, 
         stateKeys = \_ -> False,
-        stateWalls = [((fromIntegral tileWidth * 17, fromIntegral tileHeight * 9),(fromIntegral tileWidth * (17+6), fromIntegral tileHeight * 9))] }
+        stateWalls = solidEdges world}
+        --stateWalls = [((fromIntegral tileWidth * 17, fromIntegral tileHeight * 9),(fromIntegral tileWidth * (17+6), fromIntegral tileHeight * 9))] }
 
     Image.imageWithAll $ \images -> do
         newTime <- getClockTime
