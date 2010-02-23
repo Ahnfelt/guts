@@ -24,7 +24,7 @@ data Flame = Flame {
 spawnFlame :: EntityAny e => Position -> Velocity -> Angle -> Duration -> EntityMonad k e ()
 spawnFlame p v a t = do
     r1 <- randomDouble
-    let (ds, [markInterval]) = actorIntervalsNew [0.3]
+    let (ds, [markInterval]) = actorIntervalsNew [0.1]
     spawn $ \u -> AbstractEntity $ Flame {
         flameAngle = a,
         flameVelocity = v,
@@ -53,14 +53,14 @@ instance Entity Flame where
             }
         e <- self
         actorIntervals (flameMarkInterval e) True $ splatter $ do
-            setSourceRGBA 1 0 1 0.5
-            arc 0 0 5 0 (2 * pi)
+            setSourceRGBA 0 0 0 0.2
+            arc 0 0 8 0 (2 * pi)
             fill
-        e <- self
         let v = interpolate (actorAge e) 1.0 [(0.5, 1.0), (0.5, 0.5)]
         actorMove (flameVelocity e .* v)
+        d <- timePassed
         change $ \e -> e {
-            flameRotation = flameRotation e + flameRotationSpeed e * 1 --d
+            flameRotation = flameRotation e + flameRotationSpeed e * d
         }
     
     entityPosition e = Just (actorPosition $ flameActor e)
