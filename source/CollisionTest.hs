@@ -12,8 +12,8 @@ import Mechanics
 import Collision
 
 main :: IO () 
---main = do testPointLine4
-main = forever testRandom
+main = testPointLine4
+--main = forever testRandom
 
 test1 :: IO ()
 test1 = do
@@ -53,10 +53,10 @@ testPointLine3 = do
 
 testPointLine4 :: IO ()
 testPointLine4 = do
-  let a = (0.5, 0.5)
-  let b = (0.8, 0.6)
-  let c = (0.2, 0.7)
-  let d = (0.5, 0.1)
+  let b = (0.5, 0.5)
+  let a = (0.8, 0.6)
+  let d = (0.2, 0.7)
+  let c = (0.5, 0.1)
   let r = 0.25
   window a b c d r
 
