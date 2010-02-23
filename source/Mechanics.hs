@@ -1,6 +1,7 @@
 module Mechanics where
     
 type Vector = (Double, Double)
+type LineSegment = (Vector, Vector)
 type Position = Vector
 type Velocity = Vector
 type Dimension = Vector
