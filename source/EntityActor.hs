@@ -1,7 +1,7 @@
 module EntityActor (
     Actor (..), 
     actorNew, 
-    actorUpdater, actorIntervals, actorMove, actorAge,
+    actorUpdater, actorIntervals, actorMove, actorTryMove, actorAge,
     EntityActor (..),
     Interval, Intervals, actorIntervalsNew
     ) where
@@ -10,6 +10,7 @@ import Control.Monad
 import Data.Unique (Unique)
 import GameState
 import Mechanics hiding (Interval)
+import Collision
 
 newtype Interval = Interval Int deriving (Show, Eq, Ord)
 newtype Intervals = Intervals [Double] deriving (Show, Eq, Ord)
@@ -44,8 +45,23 @@ actorMove :: (EntityAny e, EntityActor e) => Velocity -> EntityMonad k e ()
 actorMove v = do
     t <- timePassed
     e <- self
-    let a@Actor { actorPosition = is } = actorGet e
+    let a = actorGet e
     change $ \e -> actorSet e (a { actorPosition = actorPosition a .+ (v .* t) })
+
+actorTryMove :: (EntityAny e, EntityActor e) => Velocity -> EntityMonad k e ()
+actorTryMove v = do
+    t <- timePassed
+    e <- self
+    let a@Actor { actorPosition = p1 } = actorGet e
+    let p2 = actorPosition a .+ (v .* t)
+    -- TODO
+    [(q1, q2)] <- walls
+    let p = case entityRadius e of 
+            Just r -> case segmentCircleCollision q1 q2 p1 p2 r of
+                Just (i1, i2) -> i2
+                Nothing -> p2        
+            Nothing -> p2
+    change $ \e -> actorSet e (a { actorPosition = p })
 
 actorIntervals :: (EntityAny e, EntityActor e) => Interval -> Bool -> EntityMonad k e r -> EntityMonad k e [r]
 actorIntervals i True f = do

@@ -25,7 +25,9 @@ data GameState = GameState {
     -- The level map
     stateMap :: TileMap,
     -- A predicate for pressed buttons
-    stateKeys :: KeyButton -> Bool
+    stateKeys :: KeyButton -> Bool,
+    -- Collision line segments.
+    stateWalls :: [LineSegment]
 }
 
 -- This represents the result of updating an entity (changes to the game state)
@@ -150,6 +152,12 @@ class Entity e => EntityAny e where
     timePassed = do
         (_, a) <- get
         return (dataPassed a)
+        
+    walls :: EntityMonad k e [LineSegment]
+    walls = do
+        (_, EntityData { dataState = GameState { stateWalls = w } }) <- get
+        return w
+    
 
 -- The type class for players, monsters, items, particles, etc.
 class (Show a) => Entity a where
