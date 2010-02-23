@@ -11,7 +11,6 @@ import System.Random
 import Control.Monad
 import Control.Monad.State.Lazy
 import Control.Monad.Error
-import Data.Either
 import Data.List
 import Data.Unique (Unique)
 import KeyState
@@ -204,4 +203,9 @@ instance Show GameState where
 
 instance Show Unique where
     show i = "#"
+
+-- TODO remove when werk is using ghc 6.10    
+rights   :: [Either a b] -> [b]
+rights x = [a | Right a <- x]
+
 

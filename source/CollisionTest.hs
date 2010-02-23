@@ -1,6 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances, 
-  MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances #-}
-module Main where
+module CollisionTest where
 
 import Graphics.UI.Gtk  hiding (fill)
 import Graphics.Rendering.Cairo
@@ -10,9 +8,8 @@ import Data.Maybe
 import Data.List
 import Data.Ord
 
-type Vector a = (a, a)
-type VectorD = Vector Double
-
+import Mechanics
+import Collision
 
 main :: IO () 
 --main = do testPointLine4
@@ -89,67 +86,33 @@ testRandom = forever $ do
     s = getStdRandom (randomR (0.1,0.9))
     v = liftM2 (,) s s
   
--- Intersection between two parametirc lines. 
-intersection :: VectorD -> VectorD -> VectorD -> VectorD -> VectorD
-intersection (px, py) (vx, vy) q@(qx, qy) u@(ux, uy) =
-    let z = vy / (uy*vx)
-        t2 = ((py - qy)/uy + (qx - px)*z) / (1 - z*ux)
-    in q .+. (u *. t2)
 
-squaredDistance :: VectorD -> VectorD -> Double
-squaredDistance (ax, ay) (bx, by) = (ax - bx)^2 + (ay - by)^2
+window ::  Vector -> Vector -> Vector -> Vector -> Double -> IO ()
+window a b s v r = do
+     initGUI
+     window <- windowNew
+     set window [windowTitle := "Moving circle VS Static line segment",
+                 windowDefaultWidth := 800, windowDefaultHeight := 800,
+                 containerBorderWidth := 0 ]
 
--- ab is the static line segment and cd is the movement. r is radius.
-segmentCircleCollision :: VectorD -> VectorD -> VectorD -> VectorD -> Double -> Maybe (VectorD, VectorD)
-segmentCircleCollision a b c d r =
-  let u = b .-. a
-      v = d .-. c
-      (i1, i2) = lineCircleCollision a u c v r
-      p1 = pointCircleCollision a c v r
-      p2 = pointCircleCollision b c v r
-      ps = filter (flip pointBoxCollision (c, d) . snd) $ catMaybes [p1, p2]
-  in 
-    if pointBoxCollision i2 (c, d) && pointBoxCollision i1 (a, b) then Just (i1, i2) 
-    else if ps /= [] then Just $ snd $ minimumBy (comparing fst) $ zip (map (squaredDistance c . snd) ps) ps 
-    else Nothing
-{-    
-    if pointBoxCollision i2 (c, d) then
-    if pointBoxCollision i1 (a, b) then Just (i1, i2) 
-    else if ps /= [] then Just $ snd $ minimumBy (comparing fst) $ zip (map (squaredDistance c . snd) ps) ps 
-    else Nothing else Nothing
--}
+     frame <- frameNew
+     containerAdd window frame
+     canvas <- drawingAreaNew
+     containerAdd frame canvas
+
+     widgetShowAll window 
+     onExpose canvas (\x ->  do (w,h) <- widgetGetSize canvas
+                                drawin <- widgetGetDrawWindow canvas
+                                renderWithDrawable drawin 
+                                    (drawCollision (fromIntegral w) a b s v r)
+                                return True)
     
--- (p + tu) is the static line and (q + tv) is the line on which the cicle moves. r is the radius. 
--- Returns (static line collision point, circle center)
--- TODO parallel lines!
-lineCircleCollision :: VectorD -> VectorD -> VectorD -> VectorD -> Double -> (VectorD, VectorD)
-lineCircleCollision p u q v r =
-  let i = intersection p u q v
-      phi = angle u v 
-      delta = r / tan phi
-      i1 = i .-. norm u *. delta
-      h = r / sin phi
-      i2 = i .-. norm v *. h
-  in (i1, i2)
-
--- point (p+tv) radius
-pointCircleCollision :: VectorD -> VectorD -> VectorD -> Double -> Maybe (VectorD, VectorD)
-pointCircleCollision (ax, ay) p@(px, py) v@(vx, vy) r = 
-    let a = vx^2 + vy^2
-        b = -2 * (vx * (px - ax) + vy * (py - ay))
-        c = (px - ax)^2 + (py - ay)^2 - r^2
-        d = b^2 - 4*a*c
-        t = (b - sqrt d) / (2 * a)
-    in if d >= 0 && a /= 0 then Just ((ax, ay), p .+. (v *. t)) else Nothing
+     onDestroy window mainQuit
+     mainGUI
 
 
-pointBoxCollision :: VectorD -> (VectorD, VectorD) -> Bool
-pointBoxCollision (x, y) ((x1, y1), (x2, y2)) =
-    ((x >= x1 && x <= x2) || (x <= x1 && x >= x2)) && 
-    ((y >= y1 && y <= y2) || (y <= y1 && y >= y2))
-
-drawCollision :: Double -> VectorD -> VectorD -> VectorD -> 
-                 VectorD -> Double -> Render ()
+drawCollision :: Double -> Vector -> Vector -> Vector -> 
+                 Vector -> Double -> Render ()
 drawCollision w a b c d r = do
     let u = b .-. a
     let v = d .-. c
@@ -208,12 +171,12 @@ drawCollision w a b c d r = do
 
     where
       mod f = uncurry f . (*. w)
-      circleFixed :: VectorD -> Double -> Render ()
+      circleFixed :: Vector -> Double -> Render ()
       circleFixed p r = do
         mod arc p r 0 (2 * pi)
         fill
       circle p r = circleFixed p (r*w)
-      crossFixed :: VectorD -> Double -> Render ()
+      crossFixed :: Vector -> Double -> Render ()
       crossFixed p s = do
         mod moveTo p 
         uncurry relMoveTo (-s/2, -s/2)
@@ -228,88 +191,3 @@ drawCollision w a b c d r = do
         setLineWidth 2
         stroke
 
-
-window ::  VectorD -> VectorD -> VectorD -> VectorD -> Double -> IO ()
-window a b s v r = do
-     initGUI
-     window <- windowNew
-     set window [windowTitle := "Moving circle VS Static line segment",
-                 windowDefaultWidth := 800, windowDefaultHeight := 800,
-                 containerBorderWidth := 0 ]
-
-     frame <- frameNew
-     containerAdd window frame
-     canvas <- drawingAreaNew
-     containerAdd frame canvas
-
-     widgetShowAll window 
-     onExpose canvas (\x ->  do (w,h) <- widgetGetSize canvas
-                                drawin <- widgetGetDrawWindow canvas
-                                renderWithDrawable drawin 
-                                    (drawCollision (fromIntegral w) a b s v r)
-                                return True)
-    
-     onDestroy window mainQuit
-     mainGUI
-
-
-class (Eq a, Show a) => Add a  where
-    (.+.) :: a -> a -> a
-    (.-.) :: a -> a -> a
-                                    
-instance (Add a, Add b) => Add (a, b) where
-    (a, b) .+. (c, d) = (a .+. c, b .+. d)
-    (a, b) .-. (c, d) = (a .-. c, b .-. d)
-
-instance (Num a) => Add a where
-    (.+.)  = (Prelude.+)
-    (.-.)  = (Prelude.-)
-
-
-(*.) :: (Num a) => Vector a -> a -> Vector a
-(a, b) *. d = (a*d, b*d)
-
-(/.) :: (Fractional a) => Vector a -> a -> Vector a
-(a, b) /. d = (a/d, b/d)
-
--- right level ??
-infixl 5 .+.
-infixl 5 .-.
-infixr 6 *.
-infixr 6 /.
-
-vectorLength :: (Floating a) => Vector a -> a
-vectorLength (a,b) = sqrt (a*a + b*b)
-
-norm :: (Floating a) => Vector a -> Vector a
-norm v = v /. vectorLength v
-
-dot :: (Num a) => Vector a -> Vector a -> a
-dot (a, b) (c, d) = a*c + b*d
-
-angle :: (Floating a) => Vector a -> Vector a -> a
-angle v1 v2 = acos (norm v1 `dot` norm v2)
-
-
---class Mul a b c | a b -> c where
---  (.*.) :: a -> b -> c
-
---instance Num a => Mul (a, a) a (a, a) where
---    (a, b) .*. d = (a*d, b*d)
-
-
--- class (Eq a, Show a) => Add a  where
---     (+) :: a -> a -> a
---     (-) :: a -> a -> a
-                                    
--- instance (Add a, Add b) => Add (a, b) where
---     (a, b) + (c, d) = (a Collision.+ c, b Collision.+ d)
---     (a, b) - (c, d) = (a Collision.- c, b Collision.- d)
-
--- instance Add Double where
---     (+)  = (Prelude.+)
---     (-)  = (Prelude.-)
-
---instance (Num a) => Add a where
---    a + b  = a Prelude.+ b
---    a - b  = a Prelude.- b

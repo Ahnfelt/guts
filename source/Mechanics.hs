@@ -8,6 +8,7 @@ type Angle = Double
 type Magnitude = Double
 type Duration = Double
 
+
 -- Velocity from angle and magnitude
 velocity :: Angle -> Magnitude -> Velocity
 velocity a m = (cos a * m, sin a * m)
@@ -46,4 +47,43 @@ intervalsSince (Interval length accumulated) deltaTime True =
 intervalsSince (Interval length accumulated) deltaTime False = 
     let accumulated' = accumulated + deltaTime in
     (0, Interval length (min accumulated' length))
+
+
+--- Vector stuff
+-----------------------
+
+-- Vector addition
+(.+.) :: Vector -> Vector -> Vector
+(a, b) .+. (c, d) = (a + c, b + d)
+
+-- Vector Substraction
+(.-.) :: Vector -> Vector -> Vector
+(a, b) .-. (c, d) = (a - c, b - d)
+
+-- Vector-scalar multiplication
+(*.) :: Vector -> Double -> Vector
+(a, b) *. d = (a*d, b*d)
+
+-- Vector-scalar division
+(/.) :: Vector -> Double -> Vector
+(a, b) /. d = (a/d, b/d)
+
+infixl 6 .+.
+infixl 6 .-.
+infixr 7 *.
+infixr 7 /.
+
+
+vectorLength :: Vector -> Double
+vectorLength (a,b) = sqrt (a*a + b*b)
+
+norm :: Vector -> Vector
+norm v = v /. vectorLength v
+
+dot :: Vector -> Vector -> Double
+dot (a, b) (c, d) = a*c + b*d
+
+angle :: Vector -> Vector -> Double
+angle v1 v2 = acos (norm v1 `dot` norm v2)
+
 
