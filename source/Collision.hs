@@ -16,7 +16,7 @@ segmentCircleCollision a b c d r =
       p1 = pointCircleCollision a c v r
       p2 = pointCircleCollision b c v r
       ps = filter (flip pointBoxCollision (c, d) . snd) $ catMaybes [p1, p2]
-  in 
+  in --Just (i1, i2) 
     if pointBoxCollision i2 (c, d) && pointBoxCollision i1 (a, b) then Just (i1, i2) 
     else if ps /= [] then Just $ snd $ minimumBy (comparing fst) $ zip (map (squaredDistance c . snd) ps) ps 
     else Nothing
@@ -63,10 +63,11 @@ pointBoxCollision (x, y) ((x1, y1), (x2, y2)) =
 
 -- Intersection between two parametirc lines. 
 intersection :: Vector -> Vector -> Vector -> Vector -> Vector
-intersection (px, py) (vx, vy) q@(qx, qy) u@(ux, uy) =
-    let z = vy / (uy*vx)
-        t2 = ((py - qy)/uy + (qx - px)*z) / (1 - z*ux)
-    in q .+ (u .* t2)
+intersection (px, py) (ux, uy) q@(qx, qy) v@(vx, vy) | vy*ux /= 0 =
+    let z = uy / (vy*ux)
+        t2 = ((py - qy)/vy + (qx - px)*z) / (1 - z*vx)
+    in q .+ (v .* t2)
+intersection p u q v = intersection q v p u
 
 squaredDistance :: Vector -> Vector -> Double
 squaredDistance (ax, ay) (bx, by) = (ax - bx)^2 + (ay - by)^2

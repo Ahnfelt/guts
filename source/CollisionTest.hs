@@ -11,7 +11,7 @@ import Collision
 
 main :: IO () 
 --main = do testPointLine1; testPointLine2; testPointLine3; testPointLine4
-main = do testOrtogonal1; testOrtogonal2; testOrtogonal3; testOrtogonal4
+main = do testOrtogonal1; testOrtogonal2; testOrtogonal3; testOrtogonal4; testOrtogonal5; testOrtogonal6; testOrtogonal7
 --main = forever testRandom
 
 test1 :: IO ()
@@ -55,6 +55,33 @@ testOrtogonal4 = do
   let a = (0.5, 0.9)
   let b = (0.5, 0.1)
   let d = (0.2, 0.4)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal5 :: IO ()
+testOrtogonal5 = do
+  let a = (0.5, 0.9)
+  let b = (0.5, 0.1)
+  let d = (0.2, 0.3)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal6 :: IO ()
+testOrtogonal6 = do
+  let a = (0.5, 0.9)
+  let b = (0.6, 0.1)
+  let d = (0.2, 0.4)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal7 :: IO ()
+testOrtogonal7 = do
+  let a = (0.5, 0.9)
+  let b = (0.6, 0.1)
+  let d = (0.2, 0.3)
   let c = (0.8, 0.4)
   let r = 0.1
   window a b c d r
@@ -194,7 +221,6 @@ drawCollision w a b c d r = do
     case pointCircleCollision b c v r of
         Just (_, p) -> crossFixed p 8
         Nothing -> return ()
-    
 
     where
       mod f = uncurry f . (.* w)
