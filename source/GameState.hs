@@ -28,13 +28,6 @@ data GameState = GameState {
     stateKeys :: KeyButton -> Bool
 }
 
-{-
--- Possible notation:
-receive $ do
-    MessageCollide <- message
-    reply $ MessageDamage $ damageNew { damageBurning = 0.02 }
--}
-
 -- This represents the result of updating an entity (changes to the game state)
 data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
