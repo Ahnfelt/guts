@@ -6,6 +6,8 @@ module EntityActor (
     Interval, Intervals, actorIntervalsNew
     ) where
 import qualified Data.Map as Map
+import Data.Ord
+import Data.List
 import Control.Monad
 import Data.Unique (Unique)
 import GameState
@@ -54,13 +56,15 @@ actorTryMove v = do
     e <- self
     let a@Actor { actorPosition = p1 } = actorGet e
     let p2 = actorPosition a .+ (v .* t)
-    -- TODO
-    [(q1, q2)] <- walls
-    let p = case entityRadius e of 
-            Just r -> case segmentCircleCollision q1 q2 p1 p2 r of
-                Just (i1, i2) -> i2
-                Nothing -> p2        
-            Nothing -> p2
+    ws <- walls
+    let stopBeforeWall (q1, q2) = 
+            case entityRadius e of 
+                Just r -> case segmentCircleCollision q1 q2 p1 p2 r of
+                    Just (i1, i2) -> i2
+                    Nothing -> p2        
+                Nothing -> p2
+    let ps = map stopBeforeWall ws
+    let p = minimumBy (comparing (squaredDistance p1)) ps
     change $ \e -> actorSet e (a { actorPosition = p })
 
 actorIntervals :: (EntityAny e, EntityActor e) => Interval -> Bool -> EntityMonad k e r -> EntityMonad k e [r]

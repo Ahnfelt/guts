@@ -16,7 +16,7 @@ segmentCircleCollision a b c d r =
       p1 = pointCircleCollision a c v r
       p2 = pointCircleCollision b c v r
       ps = filter (flip pointBoxCollision (c, d) . snd) $ catMaybes [p1, p2]
-  in 
+  in --Just (i1, i2) 
     if pointBoxCollision i2 (c, d) && pointBoxCollision i1 (a, b) then Just (i1, i2) 
     else if ps /= [] then Just $ snd $ minimumBy (comparing fst) $ zip (map (squaredDistance c . snd) ps) ps 
     else Nothing
@@ -44,10 +44,15 @@ lineCircleCollision p u q v r =
 pointCircleCollision :: Vector -> Vector -> Vector -> Double -> Maybe (Vector, Vector)
 pointCircleCollision (ax, ay) p@(px, py) v@(vx, vy) r = 
     let a = vx^2 + vy^2
-        b = -2 * (vx * (px - ax) + vy * (py - ay))
+        b = 2 * (vx * (px - ax) + vy * (py - ay))
         c = (px - ax)^2 + (py - ay)^2 - r^2
         d = b^2 - 4*a*c
-        t = (b - sqrt d) / (2 * a)
+        -- This solving method (based on the sign of b) is used to preserve 
+        -- precision in the case where the value of b is close to that of sqrt d
+        t = if b > 0 then (-b - sqrt d) / (2 * a) 
+                     else let t1 = (-b + sqrt d) / (2 * a) 
+                          in c / (a*t1)
+        --t = (-b - sqrt d) / (2 * a)
     in if d >= 0 && a /= 0 then Just ((ax, ay), p .+ (v .* t)) else Nothing
 
 
@@ -58,10 +63,11 @@ pointBoxCollision (x, y) ((x1, y1), (x2, y2)) =
 
 -- Intersection between two parametirc lines. 
 intersection :: Vector -> Vector -> Vector -> Vector -> Vector
-intersection (px, py) (vx, vy) q@(qx, qy) u@(ux, uy) =
-    let z = vy / (uy*vx)
-        t2 = ((py - qy)/uy + (qx - px)*z) / (1 - z*ux)
-    in q .+ (u .* t2)
+intersection (px, py) (ux, uy) q@(qx, qy) v@(vx, vy) | vy*ux /= 0 =
+    let z = uy / (vy*ux)
+        t2 = ((py - qy)/vy + (qx - px)*z) / (1 - z*vx)
+    in q .+ (v .* t2)
+intersection p u q v = intersection q v p u
 
 squaredDistance :: Vector -> Vector -> Double
 squaredDistance (ax, ay) (bx, by) = (ax - bx)^2 + (ay - by)^2

@@ -10,7 +10,8 @@ import Mechanics
 import Collision
 
 main :: IO () 
-main = testPointLine4
+--main = do testPointLine1; testPointLine2; testPointLine3; testPointLine4
+main = do testOrtogonal1; testOrtogonal2; testOrtogonal3; testOrtogonal4; testOrtogonal5; testOrtogonal6; testOrtogonal7
 --main = forever testRandom
 
 test1 :: IO ()
@@ -22,6 +23,78 @@ test1 = do
   let r = 0.25
   window a b c d r
 
+testOrtogonal1 :: IO ()
+testOrtogonal1 = do
+  let a = (0.3, 0.4)
+  let b = (0.6, 0.4)
+  let c = (0.5, 0.9)
+  let d = (0.5, 0.1)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal2 :: IO ()
+testOrtogonal2 = do
+  let a = (0.3, 0.4)
+  let b = (0.6, 0.4)
+  let d = (0.5, 0.9)
+  let c = (0.5, 0.1)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal3 :: IO ()
+testOrtogonal3 = do
+  let a = (0.5, 0.9)
+  let b = (0.5, 0.1)
+  let c = (0.2, 0.4)
+  let d = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal4 :: IO ()
+testOrtogonal4 = do
+  let a = (0.5, 0.9)
+  let b = (0.5, 0.1)
+  let d = (0.2, 0.4)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal5 :: IO ()
+testOrtogonal5 = do
+  let a = (0.5, 0.9)
+  let b = (0.5, 0.1)
+  let d = (0.2, 0.3)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal6 :: IO ()
+testOrtogonal6 = do
+  let a = (0.5, 0.9)
+  let b = (0.6, 0.1)
+  let d = (0.2, 0.4)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+testOrtogonal7 :: IO ()
+testOrtogonal7 = do
+  let a = (0.5, 0.9)
+  let b = (0.6, 0.1)
+  let d = (0.2, 0.3)
+  let c = (0.8, 0.4)
+  let r = 0.1
+  window a b c d r
+
+test3 :: IO ()
+test3 = do
+  let a = (0.2, 0.2)
+  let b = (0.4, 0.2)
+  let c = (0.4, 0.4)
+  let d = (0.6, 0.2)
+  let r = 0.15
+  window a b c d r
+  
 testPointLine1 :: IO ()
 testPointLine1 = do
   let a = (0.2, 0.5)
@@ -58,23 +131,6 @@ testPointLine4 = do
   let r = 0.25
   window a b c d r
 
-test2 :: IO ()
-test2 = do
-  let a = (0.3, 0.8)
-  let b = (0.6, 0.8)
-  let c = (0.5, 0.9)
-  let d = (0.5, 0.1)
-  let r = 0.1
-  window a b c d r
-
-test3 :: IO ()
-test3 = do
-  let a = (0.2, 0.2)
-  let b = (0.4, 0.2)
-  let c = (0.4, 0.4)
-  let d = (0.6, 0.2)
-  let r = 0.15
-  window a b c d r
 
 testRandom :: IO ()
 testRandom = forever $ do
@@ -165,7 +221,6 @@ drawCollision w a b c d r = do
     case pointCircleCollision b c v r of
         Just (_, p) -> crossFixed p 8
         Nothing -> return ()
-    
 
     where
       mod f = uncurry f . (.* w)
