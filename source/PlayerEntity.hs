@@ -3,45 +3,50 @@ import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
+import EntityActor
 import FlameEntity
 import PelletEntity
 import Layer
 import Damage
 import GameState
 import KeyState
-import Mechanics
+import Mechanics hiding (Interval)
 import Message
 import Tile
 
 data Player = Player { 
-    playerPosition :: Position,
     playerAimAngle :: Angle,
     playerMoveAngle :: Angle,
     playerHealth :: Double,
     playerKeys :: [KeyButton],
     playerShotgunInterval :: Interval,
     playerFlameInterval :: Interval,
-    playerId :: Unique
+    playerActor :: Actor
 } deriving Show
 
--- (position, [up, down, left, right, primary, secondary])
+
 playerNew :: Position -> [KeyButton] -> (Unique -> AbstractEntity)
-playerNew p k = \i -> AbstractEntity $ Player {
-    playerPosition = p,
-    playerAimAngle = 0,
-    playerMoveAngle = 0,
-    playerHealth = 1.0,
-    playerKeys = k,
-    playerShotgunInterval = intervalNew 0.80,
-    playerFlameInterval = intervalNew 0.03,
-    playerId = i
+playerNew p k =
+    let (ds, [shotgunInterval, flameInterval]) = actorIntervalsNew [0.80, 0.03] in
+    \u -> AbstractEntity $ Player {
+        playerAimAngle = 0,
+        playerMoveAngle = 0,
+        playerHealth = 1.0,
+        playerKeys = k,
+        playerShotgunInterval = shotgunInterval,
+        playerFlameInterval = flameInterval,
+        playerActor = actorNew u p (0, 0) 99999999 ds
     }
+
+instance EntityActor Player where
+    actorGet e = playerActor e
+    actorSet e a = e { playerActor = a }
 
 instance EntityAny Player
 
 instance Entity Player where
 
-    entityUpdate = entityUpdater $ \d -> do
+    entityUpdate = actorUpdater $ do
         receive $ do
             MessageDamage d <- message
             let d' = damageHealth damageResistanceNew d
@@ -70,26 +75,23 @@ instance Entity Player where
                 if not keyDirectional then (0, 0)
                 else if keyPrimary || keySecondary then (8, 80) 
                 else (12, 120)
-        let newPosition = playerPosition e .+ velocity newMoveAngle (movementSpeed * d)
+        actorMoveTowards (velocity newMoveAngle movementSpeed)
+        d <- timePassed
+        e <- self
         let newAimAngle = approximateAngle (turnSpeed * d) (playerAimAngle e) newMoveAngle
-        let (flameShots, flameInterval) = intervalsSince (playerFlameInterval e) d keyPrimary
-        when keyPrimary $ replicateM_ flameShots $ do
-            fireFlame newPosition newAimAngle 0.30
-        let (shotgunShots, shotgunInterval) = intervalsSince (playerShotgunInterval e) d keySecondary
-        when keySecondary $ replicateM_ shotgunShots $ do
-            fireShotgun newPosition newAimAngle 0.20
+        actorIntervals (playerFlameInterval e) keyPrimary $ do
+            fireFlame (actorPosition $ playerActor e) newAimAngle 0.30
+        actorIntervals (playerShotgunInterval e) keySecondary $ do
+            fireShotgun (actorPosition $ playerActor e) newAimAngle 0.20
         change $ \e -> e { 
             playerAimAngle = newAimAngle,
-            playerMoveAngle = newMoveAngle,
-            playerFlameInterval = flameInterval,
-            playerShotgunInterval = shotgunInterval,
-            playerPosition = newPosition
+            playerMoveAngle = newMoveAngle
         }
         e <- self
         when (playerHealth e <= 0) $ do
             vanish
 
-    entityPosition e = Just (playerPosition e)
+    entityPosition e = Just (actorPosition $ playerActor e)
 
     entityRadius e = Just 10
 
@@ -107,7 +109,7 @@ instance Entity Player where
     
     entityHitable e = True
 
-    entityId e = playerId e
+    entityId e = actorId $ playerActor e
 
 fireFlame :: (EntityAny e) => Position -> Angle -> Angle -> EntityMonad k e ()
 fireFlame position angle spread = do

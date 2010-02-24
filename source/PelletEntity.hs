@@ -9,49 +9,41 @@ import GameState
 import Mechanics
 import Message
 import Tile
+import EntityActor
 
 data Pellet = Pellet { 
-    pelletPosition :: Position,
     pelletVelocity :: Velocity,
-    pelletTime :: Duration,
-    pelletTimeLeft :: Duration,
     pelletAngle :: Angle,
-    pelletId :: Unique
+    pelletActor :: Actor
 } deriving Show
 
 -- (position, velocity, angle, timeToLive)
 spawnPellet :: EntityAny e => Position -> Velocity -> Angle -> Duration -> EntityMonad k e ()
 spawnPellet p v a t = do
-    spawn $ \i -> AbstractEntity $ Pellet {
-        pelletPosition = p,
+    let (ds, _) = actorIntervalsNew []
+    spawn $ \u -> AbstractEntity $ Pellet {
         pelletVelocity = v,
-        pelletTime = t,
-        pelletTimeLeft = t,
         pelletAngle = a,
-        pelletId = i
+        pelletActor = actorNew u p v t ds
     }
+
+instance EntityActor Pellet where
+    actorGet e = pelletActor e
+    actorSet e a = e { pelletActor = a }
 
 instance EntityAny Pellet
 
 instance Entity Pellet where
 
-    entityUpdate = entityUpdater $ \d -> do
+    entityUpdate = actorUpdater $ do
         receive $ do
             MessageCollide <- message
             reply $ MessageDamage $ damageNew { damagePiercing = 0.02 }
             vanish
         e <- self
-        let position = pelletPosition e
-        let position' = position .+ (pelletVelocity e .* d)
-        change $ \e -> e {
-            pelletPosition = position',
-            pelletTimeLeft = pelletTimeLeft e - d
-        }
-        e <- self
-        when (pelletTimeLeft e <= 0) $ do
-            vanish
+        actorTryMove (pelletVelocity e) $ \p -> vanish
     
-    entityPosition e = Just (pelletPosition e)
+    entityPosition e = Just (actorPosition $ pelletActor e)
 
     entityRadius e = Just 1
 
@@ -70,8 +62,5 @@ instance Entity Pellet where
 
     entityHitable e = False
 
-    entityId e = pelletId e
-
--- Calculates the age as a fraction of the total lifetime (0: youngest, 1: oldest)
-age e = 1 - pelletTimeLeft e / pelletTime e
+    entityId e = actorId (pelletActor e)
 

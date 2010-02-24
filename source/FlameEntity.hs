@@ -53,11 +53,11 @@ instance Entity Flame where
             }
         e <- self
         actorIntervals (flameMarkInterval e) True $ splatter $ do
-            setSourceRGBA 0 0 0 0.2
+            setSourceRGBA 0 0 0 0 -- .2
             arc 0 0 8 0 (2 * pi)
             fill
         let v = interpolate (actorAge e) 1.0 [(0.5, 1.0), (0.5, 0.5)]
-        actorTryMove (flameVelocity e .* v)
+        actorTryMove (flameVelocity e .* v) $ \p -> return ()
         d <- timePassed
         change $ \e -> e {
             flameRotation = flameRotation e + flameRotationSpeed e * d
