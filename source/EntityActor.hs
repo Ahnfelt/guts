@@ -13,6 +13,7 @@ import Data.Unique (Unique)
 import GameState
 import Mechanics hiding (Interval)
 import Collision
+import Barrier
 
 newtype Interval = Interval Int deriving (Show, Eq, Ord)
 newtype Intervals = Intervals [Double] deriving (Show, Eq, Ord)
@@ -56,15 +57,17 @@ actorTryMove v = do
     e <- self
     let a@Actor { actorPosition = p1 } = actorGet e
     let p2 = actorPosition a .+ (v .* t)
-    ws <- walls
+    bs <- barriers
+    let r = case entityRadius e of Just r -> r; Nothing -> 0
+    let ws = barriersNear bs (p1, p2) r
     let stopBeforeWall (q1, q2) = 
             case entityRadius e of 
                 Just r -> case segmentCircleCollision q1 q2 p1 p2 r of
                     Just (i1, i2) -> i2
                     Nothing -> p2        
                 Nothing -> p2
-    let ps = map stopBeforeWall ws
-    let p = minimumBy (comparing (squaredDistance p1)) ps
+    let ps = map stopBeforeWall ws    
+    let p = if null ws then p2 else minimumBy (comparing (squaredDistance p1)) ps
     change $ \e -> actorSet e (a { actorPosition = p })
 
 actorIntervals :: (EntityAny e, EntityActor e) => Interval -> Bool -> EntityMonad k e r -> EntityMonad k e [r]

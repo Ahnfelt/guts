@@ -23,6 +23,7 @@ import Mechanics
 import Message
 import Tile
 import PlayerEntity
+import Barrier
 
 --ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
 
@@ -83,7 +84,8 @@ main = do
     painters <- mapM (\f -> f $ head $ randoms $ mkStdGen 42) painterGenerators
 
     let world = tileMap ascii
-    backgroundSurface <- createImageSurface FormatRGB24 (tileMapWidth world * tileWidth) (tileMapHeight world * tileHeight)
+    let (worldWidth, worldHeight) = (tileMapWidth world * tileWidth, tileMapHeight world * tileHeight)
+    backgroundSurface <- createImageSurface FormatRGB24 worldWidth worldHeight
     renderWith backgroundSurface (drawBackgroundTiles world painters)
 
     quitState <- newIORef False
@@ -127,9 +129,7 @@ main = do
         stateEntities = [AbstractEntity p1, AbstractEntity p2], 
         stateMap = world, 
         stateKeys = \_ -> False,
-        stateWalls = solidEdges world}
-        --stateWalls = [((fromIntegral tileWidth * 17, fromIntegral tileHeight * 9),(fromIntegral tileWidth * (17+6), fromIntegral tileHeight * 9))] }
-
+        stateBarriers = foldl (addBarrier) (newBarrierMap worldWidth worldHeight) (solidEdges world)}
     Image.imageWithAll $ \images -> do
         newTime <- getClockTime
         mainLoop canvas backgroundSurface images quitState dumpState debugState keyState newTime s

@@ -18,6 +18,7 @@ import Mechanics
 import Tile
 import Layer
 import Message
+import Barrier
 
 data GameState = GameState {
     -- All the entities, including the players
@@ -27,7 +28,7 @@ data GameState = GameState {
     -- A predicate for pressed buttons
     stateKeys :: KeyButton -> Bool,
     -- Collision line segments.
-    stateWalls :: [LineSegment]
+    stateBarriers :: BarrierMap
 }
 
 -- This represents the result of updating an entity (changes to the game state)
@@ -153,10 +154,10 @@ class Entity e => EntityAny e where
         (_, a) <- get
         return (dataPassed a)
         
-    walls :: EntityMonad k e [LineSegment]
-    walls = do
-        (_, EntityData { dataState = GameState { stateWalls = w } }) <- get
-        return w
+    barriers :: EntityMonad k e BarrierMap
+    barriers = do
+        (_, EntityData { dataState = GameState { stateBarriers = bs } }) <- get
+        return bs
     
 
 -- The type class for players, monsters, items, particles, etc.
