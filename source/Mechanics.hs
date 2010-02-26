@@ -1,6 +1,8 @@
 module Mechanics where
 
 import Debug.Trace
+import Prelude hiding ((/), acos, sqrt)
+import Floating
     
 type Vector = (Double, Double)
 type LineSegment = (Vector, Vector)

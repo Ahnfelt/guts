@@ -1,12 +1,13 @@
-module Collision where
+module Collision (segmentCircleCollision, squaredDistance) where
 
+import Prelude hiding ((/), acos, sqrt)
+import Floating
 import Data.Maybe
 import Data.List
 import Data.Ord
 import Mechanics
 import Debug.Trace
 
-  
 -- ab is the static line segment and cd is the movement. r is radius.
 segmentCircleCollision :: Vector -> Vector -> Vector -> Vector -> Double -> Maybe (Vector, Vector)
 segmentCircleCollision a b c d r = do
