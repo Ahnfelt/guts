@@ -63,7 +63,7 @@ intersection p@(px, py) u@(ux, uy) q@(qx, qy) v@(vx, vy) | vy*ux /= 0 =
         t2 = ((py - qy)/vy + (qx - px)*z) / (1 - z*vx)
     in Just $ q .+ (v .* t2)
 intersection p u q v = trace ("intersection3: angle=" ++ show (angle u v)) $ 
-    if any isNaN (concatMap (\(a, b) -> [a, b]) [p, u, q, v]) then Nothing else intersection q v p u
+    if any isNaN (angle u v : concatMap (\(a, b) -> [a, b]) [p, u, q, v]) then Nothing else intersection q v p u
 
 
 squaredDistance :: Vector -> Vector -> Double
