@@ -208,6 +208,7 @@ updateGraphics gameState canvas backgroundSurface images debug = do
         let es = [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e]]
         mapM_ (drawEntity images) (sortBy (\(e, _, _) (e', _, _) -> comparing entityLayer e' e) es)
         when debug $ do
+            mapM_ drawDebugBarrier (Set.toList $ Set.fromList (barriersOverlapping (stateBarriers gameState) (x, y) (x + fromIntegral w, y + fromIntegral h)))
             mapM_ drawDebug [(e, x, y, r) | (e, x, y) <- es, Just r <- [entityRadius e]]
     drawWindowEndPaint drawable
     return True
@@ -230,6 +231,27 @@ drawDebug (e, x, y, r) = do
     setLineWidth 1
     arc x y r 0 (2 * pi)
     stroke
+    restore
+
+drawDebugBarrier :: LineSegment -> Render ()
+drawDebugBarrier ((x1, y1), (x2, y2)) = do
+    save
+    setSourceRGB 0 0 0
+    setLineWidth 2
+    moveTo x1 y1
+    lineTo x2 y2
+    stroke
+    setSourceRGB 1 0 1
+    setLineWidth 1
+    moveTo x1 y1
+    lineTo x2 y2
+    stroke
+    setSourceRGB 1 0 1
+    arc x1 y1 2 0 (2 * pi)
+    fill
+    setSourceRGB 1 0 1
+    arc x2 y2 2 0 (2 * pi)
+    fill
     restore
 
 drawSplatter :: (Entity t) => [(t, Render ())] -> Render ()
@@ -255,4 +277,5 @@ drawBackgroundTiles m ps = do
             save
             p t ts1 ts2 (x * fromIntegral tileWidth) (y * fromIntegral tileWidth) s
             restore
+
 

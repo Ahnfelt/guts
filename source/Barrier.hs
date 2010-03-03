@@ -18,8 +18,13 @@ addBarrier (BarrierMap a) l =
     let cs = cellsNear (BarrierMap a) l 0 in
     BarrierMap (accum (++) a (zip cs (repeat [l])))
 
+-- Barriers possibly overlapping rounded line
 barriersNear :: BarrierMap -> LineSegment -> Double -> [LineSegment]
 barriersNear (BarrierMap a) l r = concatMap (a!) (cellsNear (BarrierMap a) l r)
+
+-- Barriers possibly overlapping rectangle
+barriersOverlapping :: BarrierMap -> Vector -> Vector -> [LineSegment]
+barriersOverlapping (BarrierMap a) p1 p2 = concatMap (a!) (cellsNear (BarrierMap a) (p1, p2) 0)
 
 cellsNear :: BarrierMap -> LineSegment -> Double -> [(Int, Int)]
 cellsNear m ((x1, y1), (x2, y2)) r | x1 > x2 = cellsNear m ((x2, y1), (x1, y2)) r

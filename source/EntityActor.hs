@@ -65,7 +65,7 @@ tryMove p1 v (Just r) bm =
     in case catMaybes $ map stopBeforeWall bs of
         [] -> Nothing
         ps -> let ((i1, i2), l) = minimumBy (comparing (squaredDistance p1 . snd . fst)) ps
-              in Just (i1, i2, l)
+              in trace ("Line: " ++ show l) $ Just (i1, i2, l)
 
 
 actorTryMove :: (EntityAny e, EntityActor e) => Velocity -> (Vector -> EntityMonad k e ()) -> EntityMonad k e ()

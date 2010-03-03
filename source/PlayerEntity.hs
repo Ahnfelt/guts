@@ -74,7 +74,7 @@ instance Entity Player where
         let (turnSpeed, movementSpeed) = 
                 (if not keyDirectional then (0, 0)
                 else if keyPrimary || keySecondary then (8, 80) 
-                else (12, 120)) .* 0.1
+                else (12, 120)) .* 0.5
         actorMoveTowards (velocity newMoveAngle movementSpeed)
         d <- timePassed
         e <- self
