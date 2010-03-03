@@ -6,7 +6,7 @@ import Data.Unique (Unique)
 import Layer
 import Damage
 import GameState
-import Mechanics hiding (Interval)
+import Mechanics
 import Message
 import EntityActor
 

@@ -12,7 +12,7 @@ import Data.Maybe
 import Control.Monad
 import Data.Unique (Unique)
 import GameState
-import Mechanics hiding (Interval)
+import Mechanics
 import Collision
 import Barrier
 

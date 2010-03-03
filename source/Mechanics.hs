@@ -33,21 +33,6 @@ interpolate t i ((d, v):ps) | t > d = interpolate (t - d) v ps
 interpolate t i ((d, v):ps) = let f = t / (d + 0.00001) in (1.0 - f) * i + f * v
 interpolate t i [] = i
 
--- (length, accumulated)
-data Interval = Interval Duration Duration deriving (Show)
-
-intervalNew length = Interval length 0.0
-
-intervalsSince :: Interval -> Duration -> Bool -> (Int, Interval)
-intervalsSince (Interval length accumulated) deltaTime True = 
-    let accumulated' = accumulated + deltaTime in
-    let intervals = truncate (accumulated' / length) in
-    (intervals, Interval length (accumulated' - fromIntegral intervals * length))
-intervalsSince (Interval length accumulated) deltaTime False = 
-    let accumulated' = accumulated + deltaTime in
-    (0, Interval length (min accumulated' length))
-
-
 --- Vector stuff
 -----------------------
 
@@ -79,6 +64,5 @@ dot :: Vector -> Vector -> Double
 dot (a, b) (c, d) = a*c + b*d
 
 angle :: Vector -> Vector -> Double
-angle v1 v2 = acos (norm v1 `dot` norm v2)
-
+angle v1 v2 = let x = norm v1 `dot` norm v2 in if x < -1 || x > 1 then pi else acos x
 

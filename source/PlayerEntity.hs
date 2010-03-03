@@ -10,7 +10,7 @@ import Layer
 import Damage
 import GameState
 import KeyState
-import Mechanics hiding (Interval)
+import Mechanics
 import Message
 import Tile
 
