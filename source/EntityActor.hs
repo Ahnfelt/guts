@@ -64,9 +64,16 @@ tryMove p1 v (Just r) bm =
                return (p, l)
     in case catMaybes $ map stopBeforeWall bs of
         [] -> Nothing
-        ps -> let ((i1, i2), l) = minimumBy (comparing (squaredDistance p1 . snd . fst)) ps
+        ps -> let ((i1, i2), l) = minimumBy closest ps
               in trace ("Line: " ++ show l) $ Just (i1, i2, l)
-
+    where
+        closest ((i1, i2), (q1, q2)) ((i1', i2'), (q1', q2')) =
+            case comparing (squaredDistance p1) i2 i2' of
+                EQ -> 
+                    let l = if squaredDistance i1 q1 <= squaredDistance i1 q2 then q1 .- q2 else q2 .- q1 in
+                    let l' = if squaredDistance i1' q1' <= squaredDistance i1' q2' then q1' .- q2' else q2' .- q1' in
+                    comparing (angle v) l l'
+                c -> c
 
 actorTryMove :: (EntityAny e, EntityActor e) => Velocity -> (Vector -> EntityMonad k e ()) -> EntityMonad k e ()
 actorTryMove v f = do
@@ -80,7 +87,7 @@ actorTryMove v f = do
     let r = entityRadius e
     case tryMove p1 vt r bm of
         Just (i1, i2, l) -> do
-            change $ \e -> actorSet e (a { actorPosition = i2 .- (norm vt) })
+            change $ \e -> actorSet e (a { actorPosition = i2 .- (norm vt .* 0.1) })
             f i1
         Nothing -> do 
             change $ \e -> actorSet e (a { actorPosition = p2 })
@@ -100,7 +107,7 @@ actorMoveTowards v = do
     trace ("p2: " ++ show p2) $ do
     case tryMove p1 vt r bm of
         Just (i1, i2, l@(q1, q2)) -> 
-            let i2' = i2 .- (norm vt)
+            let i2' = i2 .- (norm vt .* 0.1)
                 x = p2 .- i2'
                 y = q2 .- q1
                 xy = norm y .* ((x `dot` y) / vectorLength y)

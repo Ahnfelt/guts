@@ -1,5 +1,6 @@
 module Barrier where
 import Data.Array.Diff
+import Data.List
 import Mechanics
 import Tile
 
@@ -20,11 +21,11 @@ addBarrier (BarrierMap a) l =
 
 -- Barriers possibly overlapping rounded line
 barriersNear :: BarrierMap -> LineSegment -> Double -> [LineSegment]
-barriersNear (BarrierMap a) l r = concatMap (a!) (cellsNear (BarrierMap a) l r)
+barriersNear (BarrierMap a) l r = nub $ concatMap (a!) (cellsNear (BarrierMap a) l r)
 
 -- Barriers possibly overlapping rectangle
 barriersOverlapping :: BarrierMap -> Vector -> Vector -> [LineSegment]
-barriersOverlapping (BarrierMap a) p1 p2 = concatMap (a!) (cellsNear (BarrierMap a) (p1, p2) 0)
+barriersOverlapping (BarrierMap a) p1 p2 = nub $ concatMap (a!) (cellsNear (BarrierMap a) (p1, p2) 0)
 
 cellsNear :: BarrierMap -> LineSegment -> Double -> [(Int, Int)]
 cellsNear m ((x1, y1), (x2, y2)) r | x1 > x2 = cellsNear m ((x2, y1), (x1, y2)) r

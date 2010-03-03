@@ -11,7 +11,7 @@ blockPainter s = do
         _ -> return ()
 
 paintBlock t (tn, ts, tw, te) ts2 x y s = do
-    drawShadow x y tileWidth tileHeight (like tn) (like tw) 5 5
+    drawShadow x y tileWidth tileHeight (like tn) (like tw) 8 10
     setLineWidth 1.5
     setSourceRGB 0.28 0.28 0.28
     rectangle (fromIntegral x + 1) (fromIntegral y + 1) (fromIntegral tileWidth - 1 * 2) (fromIntegral tileHeight - 1 * 2)
@@ -54,7 +54,7 @@ paintCracks x y w h s = do
             stroke
 
 drawShadow x y w h tn tw xw yw = do
-    setSourceRGBA 0.0 0.0 0.0 0.2
+    setSourceRGBA 0.0 0.0 0.0 0.25
     moveTo (fromIntegral x) (fromIntegral y)
     lineTo (fromIntegral x + fromIntegral tileWidth) (fromIntegral y + if tn then yw else 0)
     lineTo (fromIntegral x + fromIntegral tileWidth + xw) (fromIntegral y + yw)
