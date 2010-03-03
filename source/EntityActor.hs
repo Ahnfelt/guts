@@ -15,7 +15,6 @@ import GameState
 import Mechanics hiding (Interval)
 import Collision
 import Barrier
-import Debug.Trace
 
 
 newtype Interval = Interval Int deriving (Show, Eq, Ord)
@@ -64,8 +63,7 @@ tryMove p1 v (Just r) bm =
                return (p, l)
     in case catMaybes $ map stopBeforeWall bs of
         [] -> Nothing
-        ps -> let ((i1, i2), l) = minimumBy closest ps
-              in trace ("Line: " ++ show l) $ Just (i1, i2, l)
+        ps -> let ((i1, i2), l) = minimumBy closest ps in Just (i1, i2, l)
     where
         closest ((i1, i2), (q1, q2)) ((i1', i2'), (q1', q2')) =
             case comparing (squaredDistance p1) i2 i2' of
@@ -103,8 +101,6 @@ actorMoveTowards v = do
     let p2 = p1 .+ vt
     bm <- barriers
     let r = entityRadius e
-    trace ("p1: " ++ show p1) $ do
-    trace ("p2: " ++ show p2) $ do
     case tryMove p1 vt r bm of
         Just (i1, i2, l@(q1, q2)) -> 
             let i2' = i2 .- (norm vt .* 0.1)
@@ -112,16 +108,8 @@ actorMoveTowards v = do
                 y = q2 .- q1
                 xy = norm y .* ((x `dot` y) / vectorLength y)
             in do
-                trace ("l: " ++ show l) $ do
-                trace ("i2: " ++ show i2) $ do
-                trace ("i2': " ++ show i2') $ do
-                trace ("xy: " ++ show xy) $ do
                 change $ \e -> actorSet e (a { actorPosition = i2' })
-                e <- self
-                trace ("pos1:" ++ show (actorPosition (actorGet e))) $ do
                 actorTryMove (xy .* (1/t)) (\v -> return ())
-                e <- self
-                trace ("pos2:" ++ show (actorPosition (actorGet e))) (return ())
         Nothing -> change $ \e -> actorSet e (a { actorPosition = p2 })
     
 

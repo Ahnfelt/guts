@@ -6,7 +6,6 @@ import Data.Maybe
 import Data.List
 import Data.Ord
 import Mechanics
-import Debug.Trace
 import Control.Monad
 
 -- ab is the static line segment and cd is the movement. r is radius.
@@ -39,7 +38,6 @@ lineCircleCollision p u q v r = do
 -- point (p+tv) radius
 pointCircleCollision :: Vector -> Vector -> Vector -> Double -> Maybe (Vector, Vector)
 pointCircleCollision (ax, ay) p@(px, py) v@(vx, vy) r = 
-    trace ("pointCircleCollision "++ show (ax, ay) ++ " " ++ show p ++ " " ++ show v ++ " " ++ show r)$
     let a = vx^2 + vy^2
         b = 2 * (vx * (px - ax) + vy * (py - ay))
         c = (px - ax)^2 + (py - ay)^2 - r^2
@@ -60,7 +58,7 @@ pointBoxCollision (x, y) ((x1, y1), (x2, y2)) =
 
 -- Intersection between two parametirc lines. 
 intersection :: Vector -> Vector -> Vector -> Vector -> Maybe Vector
-intersection p u q v | angle u v == 0 || angle u v == pi = trace ("Intersection between parrallel lines!!") $ Nothing
+intersection p u q v | angle u v == 0 || angle u v == pi = Nothing
 intersection p@(px, py) u@(ux, uy) q@(qx, qy) v@(vx, vy) | vy*ux /= 0 =
     let z = uy / (vy*ux)
         t2 = ((py - qy)/vy + (qx - px)*z) / (1 - z*vx)

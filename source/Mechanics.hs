@@ -1,6 +1,5 @@
 module Mechanics where
 
-import Debug.Trace
 import Prelude hiding ((/), acos, sqrt)
 import Floating
     
@@ -80,6 +79,6 @@ dot :: Vector -> Vector -> Double
 dot (a, b) (c, d) = a*c + b*d
 
 angle :: Vector -> Vector -> Double
-angle v1 v2 = trace (show (norm v1) ++ "  " ++ show (norm v2)) $ acos (norm v1 `dot` norm v2)
+angle v1 v2 = acos (norm v1 `dot` norm v2)
 
 
