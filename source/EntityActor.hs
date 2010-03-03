@@ -74,35 +74,49 @@ actorTryMove v f = do
     e <- self
     let a = actorGet e
     let p1 = actorPosition a
-    let v' = v .* t
-    let p2 = p1 .+ v'
+    let vt = v .* t
+    let p2 = p1 .+ vt
     bm <- barriers
     let r = entityRadius e
-    case tryMove p1 v' r bm of
+    case tryMove p1 vt r bm of
         Just (i1, i2, l) -> do
-            change $ \e -> actorSet e (a { actorPosition = i2 .- (norm v') })
+            change $ \e -> actorSet e (a { actorPosition = i2 .- (norm vt) })
             f i1
         Nothing -> do 
             change $ \e -> actorSet e (a { actorPosition = p2 })
 
 actorMoveTowards :: (EntityAny e, EntityActor e) => Velocity -> EntityMonad k e ()
+actorMoveTowards (0, 0) = return ()
 actorMoveTowards v = do
     t <- timePassed
     e <- self
     let a = actorGet e
     let p1 = actorPosition a
-    let v' = v .* t
-    let p2 = p1 .+ v'
+    let vt = v .* t
+    let p2 = p1 .+ vt
     bm <- barriers
     let r = entityRadius e
-    let p = case tryMove p1 v' r bm of
-            Just (i1, i2, (q1, q2)) -> 
-                let x = p2 .- i2
-                    y = q2 .- q1
-                    xy = norm y .* ((x `dot` y) / vectorLength y)
-                in (xy .+ i2) .- (norm v')
-            Nothing -> p2
-    change $ \e -> actorSet e (a { actorPosition = p })
+    trace ("p1: " ++ show p1) $ do
+    trace ("p2: " ++ show p2) $ do
+    case tryMove p1 vt r bm of
+        Just (i1, i2, l@(q1, q2)) -> 
+            let i2' = i2 .- (norm vt)
+                x = p2 .- i2'
+                y = q2 .- q1
+                xy = norm y .* ((x `dot` y) / vectorLength y)
+            in do
+                trace ("l: " ++ show l) $ do
+                trace ("i2: " ++ show i2) $ do
+                trace ("i2': " ++ show i2') $ do
+                trace ("xy: " ++ show xy) $ do
+                change $ \e -> actorSet e (a { actorPosition = i2' })
+                e <- self
+                trace ("pos1:" ++ show (actorPosition (actorGet e))) $ do
+                actorTryMove (xy .* (1/t)) (\v -> return ())
+                e <- self
+                trace ("pos2:" ++ show (actorPosition (actorGet e))) (return ())
+        Nothing -> change $ \e -> actorSet e (a { actorPosition = p2 })
+    
 
 
 actorIntervals :: (EntityAny e, EntityActor e) => Interval -> Bool -> EntityMonad k e r -> EntityMonad k e [r]
