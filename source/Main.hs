@@ -129,7 +129,7 @@ main = do
         stateEntities = [AbstractEntity p1, AbstractEntity p2], 
         stateMap = world, 
         stateKeys = \_ -> False,
-        stateBarriers = foldl (addBarrier) (newBarrierMap worldWidth worldHeight) (solidEdges world)}
+        stateBarriers = addBarrier (foldl (addBarrier) (newBarrierMap worldWidth worldHeight) (solidEdges world)) ((200, 0), (350, 400))}
     Image.imageWithAll $ \images -> do
         newTime <- getClockTime
         mainLoop canvas backgroundSurface images quitState dumpState debugState keyState newTime s
