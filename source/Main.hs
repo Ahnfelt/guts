@@ -35,28 +35,28 @@ ascii = [
     "*                                                          *",
     "*           `             `                                *",
     "*                   bbbbbbbbb                              *",
-    "*                   b       b                              *",
-    "*                           b                              *",
-    "*                bbbbbb     b                              *",
-    "*                b    b     b      ****                    *",
-    "*                b bb b     b     *** *                    *",
-    "*                b  b b  bb b       ****                   *",
-    "*              b b bb b  b  b         *                    *",
-    "*          `   b   b     b bb                              *",
-    "*             bbbb b bbbbb b                               *",
-    "*                b     b   b            ```                *",
-    "*                bbbbb b bbb       ```` `` ``              *",
-    "*           *            `       ```````` ``               *",
-    "*                              ````   ``                   *",
+    "*                  `b```````b                              *",
+    "*                 ```````*``b                              *",
+    "*                bbbbbb`````b                              *",
+    "*                b````b`````b      ****                    *",
+    "*                b`bb`b`````b     *** *                    *",
+    "*               `b``b`b``bb`b       ****                   *",
+    "*              b`b`bb`b``b``b         *                    *",
+    "*          `   b```b`````b`bb                              *",
+    "*             bbbb`b`bbbbb`b                               *",
+    "*                b`````b```b            ```                *",
+    "*                bbbbb`b`bbb       ```` `` ``              *",
+    "*           *        `````       ```````` ``               *",
+    "*                     ` `      ````   ``                   *",
     "*                                `     `                   *",
     "*                                                          *",
     "*                      `                                   *",
     "*            *                                             *",
     "*                                         `                *",
-    "*                                                          *",
-    "*                                                          *",
-    "*                                                          *",
-    "*                                                          *",
+    "*                        ** **                             *",
+    "*                      ***   ***                           *",
+    "*                     **       **                          *",
+    "*                   ***         ***                        *",
     "************************************************************"
     ]
 
@@ -164,7 +164,7 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
             let m''' = messageMap (m'' ++ m')
             renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
             updateGraphics s'' canvas surface images debug
-            when debug $ putStrLn ("Entity count: " ++ show (length es''))
+            --when debug $ putStrLn ("Entity count: " ++ show (length es''))
             loop t' s'' m'''
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms

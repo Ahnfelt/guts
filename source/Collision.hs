@@ -1,4 +1,4 @@
-module Collision (segmentCircleCollision, squaredDistance) where
+module Collision (segmentCircleCollision, squaredDistance, intersection, pointCircleCollision) where
 
 import Prelude hiding ((/), acos, sqrt)
 import Floating
@@ -7,6 +7,7 @@ import Data.List
 import Data.Ord
 import Mechanics
 import Control.Monad
+import Debug.Trace
 
 -- ab is the static line segment and cd is the movement. r is radius.
 segmentCircleCollision :: Vector -> Vector -> Vector -> Vector -> Double -> Maybe (Vector, Vector)
@@ -52,9 +53,12 @@ pointCircleCollision (ax, ay) p@(px, py) v@(vx, vy) r =
 
 
 pointBoxCollision :: Vector -> (Vector, Vector) -> Bool
-pointBoxCollision (x, y) ((x1, y1), (x2, y2)) =
-    ((x >= x1 && x <= x2) || (x <= x1 && x >= x2)) && 
-    ((y >= y1 && y <= y2) || (y <= y1 && y >= y2))
+pointBoxCollision p@(x, y) b@((x1, y1), (x2, y2)) = 
+    let e = 0.0000001
+        r = 
+            ((x+e >= x1 && x <= x2+e) || (x <= x1+e && x+e >= x2)) && 
+            ((y+e >= y1 && y <= y2+e) || (y <= y1+e && y+e >= y2))
+    in {-trace ("pointBoxCollision " ++ show p ++ " " ++ show b ++ " => " ++ show r)-} r
 
 -- Intersection between two parametirc lines. 
 intersection :: Vector -> Vector -> Vector -> Vector -> Maybe Vector

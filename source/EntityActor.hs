@@ -15,6 +15,7 @@ import GameState
 import Mechanics
 import Collision
 import Barrier
+import Debug.Trace
 
 
 newtype Interval = Interval Int deriving (Show, Eq, Ord)
@@ -84,7 +85,7 @@ actorTryMove v f = do
     bm <- barriers
     let r = entityRadius e
     case tryMove p1 vt r bm of
-        Just (i1, i2, l) -> do
+        Just (i1, i2, l) -> do 
             change $ \e -> actorSet e (a { actorPosition = i2 .- (norm vt .* 0.1) })
             f i1
         Nothing -> do 

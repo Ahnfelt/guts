@@ -11,7 +11,8 @@ import Collision
 
 main :: IO () 
 --main = do testPointLine1; testPointLine2; testPointLine3; testPointLine4
-main = do testOrtogonal1; testOrtogonal2; testOrtogonal3; testOrtogonal4; testOrtogonal5; testOrtogonal6; testOrtogonal7
+--main = do testOrtogonal1; testOrtogonal2; testOrtogonal3; testOrtogonal4; testOrtogonal5; testOrtogonal6; testOrtogonal7
+main = do testHole1a; testHole1b; testHole1c; testHole1d; testHole2
 --main = forever testRandom
 
 test1 :: IO ()
@@ -22,6 +23,58 @@ test1 = do
   let d = (0.7, 0.3)
   let r = 0.25
   window a b c d r
+
+testHole1a :: IO ()
+testHole1a = do
+    let s = 0.001
+    let a = (200.0,0.0) .* s
+    let b = (350.0,400.0) .* s
+    let c = (260,238.5) .* s
+    let d = (335,238.5) .* s
+    let r = 10 * s
+    window a b c d r
+
+testHole1b :: IO ()
+testHole1b = do
+    let s = 0.001
+    let b = (200.0,0.0) .* s
+    let a = (350.0,400.0) .* s
+    let c = (260,238.5) .* s
+    let d = (335,238.5) .* s
+    let r = 10 * s
+    window a b c d r
+
+testHole1c :: IO ()
+testHole1c = do
+    let s = 0.001
+    let a = (200.0,0.0) .* s
+    let b = (350.0,400.0) .* s
+    let d = (260,238.5) .* s
+    let c = (335,238.5) .* s
+    let r = 10 * s
+    window a b c d r
+
+testHole1d :: IO ()
+testHole1d = do
+    let s = 0.001
+    let b = (200.0,0.0) .* s
+    let a = (350.0,400.0) .* s
+    let d = (260,238.5) .* s
+    let c = (335,238.5) .* s
+    let r = 10 * s
+    window a b c d r
+
+testHole2 :: IO ()
+testHole2 = do
+    let s = 0.001
+    let p = (0,50)
+    let a = (200.0,0.0) .* s
+    let b = (350.0,400.0) .* s
+    let c = ((275.123164681647,238.53799999999998) .+ p) .* s
+    let d = ((335.755324681647,238.53799999999998) .+ p) .* s
+    let r = 10 * s
+    window a b c d r
+
 
 testOrtogonal1 :: IO ()
 testOrtogonal1 = do
@@ -170,7 +223,7 @@ drawCollision :: Double -> Vector -> Vector -> Vector ->
 drawCollision w a b c d r = do
     let u = b .- a
     let v = d .- c
-    let i = intersection a u d v
+    let Just i = intersection a u d v
 
     -- Background
     setSourceRGB 0.8 0.8 0.8
