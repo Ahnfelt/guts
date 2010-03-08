@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Player where
+module Panda where
 import qualified Collidable
 import Feature
 import Entity

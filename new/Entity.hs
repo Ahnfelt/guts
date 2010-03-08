@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 module Entity where
 import Control.Monad.State.Lazy
 
@@ -10,4 +11,5 @@ modify f = do
     e <- get
     e' <- f e
     put $ e'
+
 
