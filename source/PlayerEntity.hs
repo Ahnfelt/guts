@@ -13,6 +13,10 @@ import KeyState
 import Mechanics
 import Message
 import Tile
+import Weapon
+import Shotgun
+import Flamethrower
+
 
 data Player = Player { 
     playerAimAngle :: Angle,
@@ -21,7 +25,8 @@ data Player = Player {
     playerKeys :: [KeyButton],
     playerShotgunInterval :: Interval,
     playerFlameInterval :: Interval,
-    playerActor :: Actor
+    playerActor :: Actor,
+    playerWeapons :: [AbstractWeapon]
 } deriving Show
 
 
@@ -35,7 +40,8 @@ playerNew p k =
         playerKeys = k,
         playerShotgunInterval = shotgunInterval,
         playerFlameInterval = flameInterval,
-        playerActor = actorNew u p (0, 0) 99999999 ds
+        playerActor = actorNew u p (0, 0) 99999999 ds, 
+        playerWeapons = [newFlamethrower, newShotgun]
     }
 
 instance EntityActor Player where
@@ -79,13 +85,14 @@ instance Entity Player where
         d <- timePassed
         e <- self
         let newAimAngle = approximateAngle (turnSpeed * d) (playerAimAngle e) newMoveAngle
-        actorIntervals (playerFlameInterval e) keyPrimary $ do
-            fireFlame (actorPosition $ playerActor e) newAimAngle 0.30
-        actorIntervals (playerShotgunInterval e) keySecondary $ do
-            fireShotgun (actorPosition $ playerActor e) newAimAngle 0.20
+        let weapons = (playerWeapons e)
+        let newWeapons = if keySecondary then tail weapons ++ [head weapons] else weapons
+        let selectedWeapon = head newWeapons
+        when keyPrimary $ fire selectedWeapon (actorPosition $ playerActor e) newAimAngle
         change $ \e -> e { 
             playerAimAngle = newAimAngle,
-            playerMoveAngle = newMoveAngle
+            playerMoveAngle = newMoveAngle,
+            playerWeapons = newWeapons
         }
         e <- self
         when (playerHealth e <= 0) $ do
@@ -110,28 +117,4 @@ instance Entity Player where
     entityHitable e = True
 
     entityId e = actorId $ playerActor e
-
-fireFlame :: (EntityAny e) => Position -> Angle -> Angle -> EntityMonad k e ()
-fireFlame position angle spread = do
-    positionRandom <- randomDouble
-    spreadRandom <- randomDouble
-    velocityRandom <- randomDouble
-    spawnFlame
-        (position .+ velocity angle (20 + 5 * positionRandom))
-        (velocity (angle - 0.5 * spread + spreadRandom * spread) (100 + velocityRandom * 50) .* 1.5)
-        angle
-        1.0
-
-fireShotgun :: (EntityAny e) => Position -> Angle -> Angle -> EntityMonad k e ()
-fireShotgun position angle spread = replicateM_ 40 $ do
-    spreadRandom <- randomDouble
-    speedRandom <- randomDouble
-    timeToLiveRandom <- randomDouble
-    let spreadRandom' = 1 - (log(1 / spreadRandom - 1) + 6) / 12
-    let angle' = angle - 0.5 * spread + spreadRandom' * spread
-    spawnPellet
-        (position .+ velocity angle' 20)
-        (velocity angle' (600 + speedRandom * 150))
-        angle'
-        (0.3 + timeToLiveRandom * 0.3)
 
