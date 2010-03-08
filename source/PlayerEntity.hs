@@ -32,7 +32,7 @@ data Player = Player {
 
 playerNew :: Position -> [KeyButton] -> (Unique -> AbstractEntity)
 playerNew p k =
-    let (ds, [shotgunInterval, flameInterval]) = actorIntervalsNew [0.80, 0.03] in
+    let (ds, [shotgunInterval, flameInterval]) = actorIntervalsNew [0.080, 0.03] in
     \u -> AbstractEntity $ Player {
         playerAimAngle = 0,
         playerMoveAngle = 0,

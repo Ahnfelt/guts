@@ -11,9 +11,9 @@ import PelletEntity
 newShotgun :: AbstractWeapon
 newShotgun = 
     AbstractWeapon $ Firearm {
-        firearmInterval = (head . snd) (actorIntervalsNew [0.80]),
-        firearmSpread = 0.2,
-        firearmProjectiles = 40,
+        firearmInterval = (head . snd) (actorIntervalsNew [0.08]),
+        firearmSpread = 0.4,
+        firearmProjectiles = 100,
         firearmFire = fire
     }
     where 

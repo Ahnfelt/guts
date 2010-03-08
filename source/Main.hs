@@ -168,8 +168,8 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
             loop t' s'' m'''
     messages e ms = Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
-    collisions es =  [(entityId e1, (e2, MessageCollide)) | 
-        e1 <- es, e2 <- es,
+    collisions es = [(entityId e2, (e1, MessageCollide)) | 
+        e1 <- filter entityHitable es, e2 <- es,
         entityHitable e1 || entityHitable e2,
         entityId e1 /= entityId e2,
         Just (x1, y1) <- [entityPosition e1], Just r1 <- [entityRadius e1],
