@@ -20,7 +20,7 @@ data Flame = Flame {
     flameActor :: Actor
 } deriving Show
 
--- (position, velocity, angle, timeToLive)
+-- (origin, position, velocity, angle, timeToLive)
 spawnFlame :: EntityAny e => Position -> Velocity -> Angle -> Duration -> EntityMonad k e ()
 spawnFlame p v a t = do
     r1 <- randomDouble
