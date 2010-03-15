@@ -17,12 +17,14 @@ import qualified Data.Map as Map
 import qualified Image
 import qualified Painter.Outdoor
 import qualified Painter.Base
-import GameState
-import World.Mechanics
+import KeyState
 import Message
+import Layer
+import World.Mechanics
 import World.Tile
-import Entity.Player
 import World.Barrier
+import Entity
+import Entity.Player
 
 --ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
 
@@ -60,10 +62,10 @@ ascii = [
     ]
 
 painterGenerators = [
-    OutdoorPainter.rockPainter,
-    OutdoorPainter.grassPainter (tileLike OutdoorGrass) 0.5,
-    OutdoorPainter.grassPainter (tileLike OutdoorBush) 1.0,
-    BasePainter.blockPainter]
+    Painter.Outdoor.rockPainter,
+    Painter.Outdoor.grassPainter (tileLike OutdoorGrass) 0.5,
+    Painter.Outdoor.grassPainter (tileLike OutdoorBush) 1.0,
+    Painter.Base.blockPainter]
 
 main :: IO ()
 main = do
@@ -152,7 +154,7 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
             t' <- getClockTime
             let d = diffClockTime t t'
             r <- getStdRandom (first randoms . split)
-            let us = map (\(e, r') -> (e, entityUpdate e s' (messages e m) r' d)) (zip (stateEntities s') r)
+            let us = map (\(e, r') -> (e, updateEntity e s' (messages e m) r' d)) (zip (stateEntities s') r)
             let es' = concat $ map deltaEntities (map snd us)
             es'' <- forM es' $ \e -> do
                 i <- newUnique
@@ -161,7 +163,7 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
             let m' = concat $ map (\e -> [(e', (deltaSelf e, m)) | (e', m) <- deltaMessages e]) (map snd us)
             let m'' = collisions es''
             let m''' = messageMap (m'' ++ m')
-            renderWith surface (drawSplatter [(e, s) | (e, d) <- us, Just s <- [deltaSplatter d]])
+            renderWith surface (sequence_ [s | (_, d) <- us, Just s <- [deltaSplatter d]])
             updateGraphics s'' canvas surface images debug
             --when debug $ putStrLn ("Entity count: " ++ show (length es''))
             loop t' s'' m'''
@@ -195,42 +197,23 @@ diffClockTime (TOD s1 p1) (TOD s2 p2) =
         dp = fromIntegral (p2 - p1)
     in ds + (dp * 1e-12)
 
-updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> (String -> Surface) -> Bool -> IO Bool
-updateGraphics gameState canvas backgroundSurface images debug = do
+updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> (String -> Surface) -> (Layer, Render) -> Bool -> IO Bool
+updateGraphics gameState canvas backgroundSurface images drawings debug = do
     let (x, y) = (0, 0)
     (w, h) <- widgetGetSize canvas
     drawable <- widgetGetDrawWindow canvas
     drawWindowBeginPaintRect drawable (Rectangle 0 0 w h)
     renderWithDrawable drawable $ do
-        setSourceSurface backgroundSurface (-x) (-y)
+        save
+        translate (-x) (-y)
+        setSourceSurface backgroundSurface 0 0
         paint
-        let es = [(e, x, y) | e <- stateEntities gameState, Just (x, y) <- [entityPosition e]]
-        mapM_ (drawEntity images) (sortBy (\(e, _, _) (e', _, _) -> comparing entityLayer e' e) es)
+        sequence_ (sortBy (comparing fst) drawings)
         when debug $ do
             mapM_ drawDebugBarrier (Set.toList $ Set.fromList (barriersOverlapping (stateBarriers gameState) (x, y) (x + fromIntegral w, y + fromIntegral h)))
-            mapM_ drawDebug [(e, x, y, r) | (e, x, y) <- es, Just r <- [entityRadius e]]
+        restore
     drawWindowEndPaint drawable
     return True
-
-drawEntity :: (Entity t) => (String -> Surface) -> (t, Double, Double) -> Render ()
-drawEntity images (e, x, y) = do
-    save
-    translate x y
-    entityDraw e images
-    restore
-
-drawDebug :: (Entity t) => (t, Double, Double, Double) -> Render ()
-drawDebug (e, x, y, r) = do
-    save
-    setSourceRGB 0 0 0
-    setLineWidth 2
-    arc x y r 0 (2 * pi)
-    stroke
-    setSourceRGB 1 0 1
-    setLineWidth 1
-    arc x y r 0 (2 * pi)
-    stroke
-    restore
 
 drawDebugBarrier :: LineSegment -> Render ()
 drawDebugBarrier ((x1, y1), (x2, y2)) = do
@@ -252,17 +235,6 @@ drawDebugBarrier ((x1, y1), (x2, y2)) = do
     arc x2 y2 2 0 (2 * pi)
     fill
     restore
-
-drawSplatter :: (Entity t) => [(t, Render ())] -> Render ()
-drawSplatter ps = do
-    forM_ ps $ \(e, r) -> do
-        case entityPosition e of
-            Just (x, y) -> do
-                save
-                translate x y
-                r
-                restore
-            Nothing -> return ()
 
 drawBackgroundTiles :: TileMap -> [TilePainter] -> Render ()
 drawBackgroundTiles m ps = do
