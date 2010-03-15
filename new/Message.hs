@@ -1,5 +1,5 @@
 module Message where
-import Damage
+import Message.Damage
 
 data Message
     = MessageCollide 

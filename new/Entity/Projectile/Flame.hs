@@ -1,14 +1,13 @@
-module FlameEntity (spawnFlame) where
+module Entity.Projectile.Flame (spawnFlame) where
 import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
 import Layer
-import Damage
+import Message.Damage
 import GameState
-import Mechanics
+import World.Mechanics
 import Message
-import EntityActor
 
 data Flame = Flame { 
     flameAngle :: Angle,

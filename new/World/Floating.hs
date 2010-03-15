@@ -1,4 +1,4 @@
-module Floating ((/), acos, sqrt) where
+module World.Floating ((/), acos, sqrt) where
 import qualified Prelude as P
 
 -- exception safe operations

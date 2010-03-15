@@ -1,8 +1,8 @@
-module OutdoorPainter (rockPainter, grassPainter, flowerPainter, cloverPainter) where
+module Painter.Outdoor (rockPainter, grassPainter, flowerPainter, cloverPainter) where
 import Graphics.Rendering.Cairo
 import System.Random
 import Control.Monad (when)
-import Tile
+import World.Tile
 
 grassPainter :: (Tile -> Bool) -> Double -> Int -> IO TilePainter
 grassPainter f z s = do

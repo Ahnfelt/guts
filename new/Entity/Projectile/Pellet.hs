@@ -1,15 +1,14 @@
-module PelletEntity (spawnPellet) where
+module Entity.Projectile.Pellet (spawnPellet) where
 import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
 import Layer
-import Damage
 import GameState
-import Mechanics
+import World.Mechanics
 import Message
-import Tile
-import EntityActor
+import Message.Damage
+import World.Tile
 
 data Pellet = Pellet { 
     pelletVelocity :: Velocity,

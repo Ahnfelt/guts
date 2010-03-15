@@ -1,10 +1,9 @@
 {-# LANGUAGE ExistentialQuantification, PolymorphicComponents #-}
-module Weapon where
+module Entity.Weapon where
 
 import GameState
-import Mechanics
-import EntityActor
 import Control.Monad
+import World.Mechanics
 
 
 class Weapon a where

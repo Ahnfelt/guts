@@ -1,8 +1,8 @@
-module Barrier where
+module World.Barrier where
 import Data.Array.Diff
 import Data.List
-import Mechanics
-import Tile
+import World.Mechanics
+import World.Tile
 
 newtype BarrierMap = BarrierMap (DiffArray (Int, Int) [LineSegment])
 

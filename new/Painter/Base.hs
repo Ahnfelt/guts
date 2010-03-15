@@ -1,8 +1,8 @@
-module BasePainter (blockPainter) where
+module Painter.Base (blockPainter) where
 import Graphics.Rendering.Cairo
 import System.Random
 import Control.Monad (when)
-import Tile
+import World.Tile
 
 blockPainter :: Int -> IO TilePainter
 blockPainter s = do

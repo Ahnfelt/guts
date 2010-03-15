@@ -1,12 +1,11 @@
-module Flamethrower where
+module Entity.Weapon.Flamethrower where
 
-import Weapon
-import EntityActor
-import Mechanics
+import World.Mechanics
 import GameState
 import Control.Monad
 import System.Random
-import FlameEntity
+import Entity.Weapon
+import Entity.Projectile.Flame
 
 
 newFlamethrower :: AbstractWeapon

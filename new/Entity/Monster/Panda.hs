@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Panda where
+module Entity.Monster.Panda where
 import qualified Collidable
 import Feature
 import Entity

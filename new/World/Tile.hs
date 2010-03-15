@@ -1,4 +1,4 @@
-module Tile (
+module World.Tile (
     Tile (..), OutdoorTile (..), BaseTile (..), 
     TileLike (..), tileSolid, tileWidth, tileHeight, 
     TilePainter, TileMap, tileMapEmpty, tileMap, 
@@ -9,7 +9,7 @@ module Tile (
 import Graphics.Rendering.Cairo (Render)
 import Data.Array.Diff
 import Data.List
-import Mechanics
+import World.Mechanics
 
 tileWidth = 32
 tileHeight = 32

@@ -1,4 +1,4 @@
-module Collidable (Data, Class (..), before, after) where
+module Feature.Collidable (Data, Class (..), before, after) where
 import Entity (M)
 
 data Data = Data {

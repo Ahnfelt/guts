@@ -1,7 +1,7 @@
-module Mechanics where
+module World.Mechanics where
 
 import Prelude hiding ((/), acos, sqrt)
-import Floating
+import World.Floating
     
 type Vector = (Double, Double)
 type LineSegment = (Vector, Vector)

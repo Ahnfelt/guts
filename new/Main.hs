@@ -14,16 +14,15 @@ import Data.List (sortBy)
 import Data.Ord (comparing)
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import qualified OutdoorPainter
-import qualified BasePainter
 import qualified Image
+import qualified Painter.Outdoor
+import qualified Painter.Base
 import GameState
-import KeyState
-import Mechanics
+import World.Mechanics
 import Message
-import Tile
-import PlayerEntity
-import Barrier
+import World.Tile
+import Entity.Player
+import World.Barrier
 
 --ascii = let (w, h) = (100, 100) in take h $ repeat (take w $ repeat '*')
 

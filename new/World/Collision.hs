@@ -1,11 +1,11 @@
-module Collision (segmentCircleCollision, squaredDistance, intersection, pointCircleCollision) where
+module World.Collision (segmentCircleCollision, squaredDistance, intersection, pointCircleCollision) where
 
 import Prelude hiding ((/), acos, sqrt)
-import Floating
+import World.Floating
 import Data.Maybe
 import Data.List
 import Data.Ord
-import Mechanics
+import World.Mechanics
 import Control.Monad
 import Debug.Trace
 

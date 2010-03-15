@@ -13,12 +13,11 @@ import Control.Monad.State.Lazy
 import Control.Monad.Error
 import Data.List
 import Data.Unique (Unique)
-import KeyState
-import Mechanics
-import Tile
 import Layer
 import Message
-import Barrier
+import World.Barrier
+import World.Tile
+import World.Mechanics
 
 data GameState = GameState {
     -- All the entities, including the players
@@ -26,7 +25,7 @@ data GameState = GameState {
     -- The level map
     stateMap :: TileMap,
     -- A predicate for pressed buttons
-    stateKeys :: KeyButton -> Bool,
+    stateKeys :: String -> Bool,
     -- Collision line segments.
     stateBarriers :: BarrierMap
 }
@@ -144,7 +143,7 @@ class Entity e => EntityAny e where
         put (k, a { dataRandom = r' })
         return v
 
-    pressed :: KeyButton -> EntityMonad k e Bool
+    pressed :: String -> EntityMonad k e Bool
     pressed b = do
         (_, EntityData { dataState = GameState { stateKeys = f } }) <- get
         return (f b)

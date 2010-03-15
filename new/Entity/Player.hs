@@ -1,21 +1,19 @@
-module PlayerEntity (playerNew) where
+module Entity.Player (playerNew) where
 import Graphics.Rendering.Cairo
 import Control.Monad
 import System.Random
 import Data.Unique (Unique)
-import EntityActor
-import FlameEntity
-import PelletEntity
 import Layer
-import Damage
 import GameState
-import KeyState
-import Mechanics
+import World.Mechanics
 import Message
-import Tile
-import Weapon
-import Shotgun
-import Flamethrower
+import Message.Damage
+import World.Tile
+import Entity.Weapon
+import Entity.Weapon.Shotgun
+import Entity.Weapon.Flamethrower
+import Entity.Projectile.Flame
+import Entity.Projectile.Pellet
 
 
 data Player = Player { 

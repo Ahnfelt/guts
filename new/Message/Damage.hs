@@ -1,4 +1,4 @@
-module Damage where
+module Message.Damage where
 
 data Damage = Damage {
     damagePiercing :: Double,

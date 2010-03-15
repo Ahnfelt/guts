@@ -1,11 +1,10 @@
-module Shotgun where
+module Entity.Weapon.Shotgun where
 
-import Weapon
-import EntityActor
-import Mechanics
 import GameState
 import System.Random
-import PelletEntity
+import World.Mechanics
+import Entity.Weapon
+import Entity.Projectile.Pellet
 
 
 newShotgun :: AbstractWeapon
