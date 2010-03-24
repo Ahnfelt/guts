@@ -7,7 +7,7 @@ import Message
 import World.Tile
 import World.Barrier
 
-type M e r = State e r
+type M e r = State (InternalState e) r
 
 class Class e where
     updateEntity :: e -> GameState -> Int -> DeltaState
@@ -15,7 +15,7 @@ class Class e where
 modify f = do
     e <- get
     e' <- f e
-    put $ e'
+    put e'
 
 -- This is to be able to store different kinds of entities in lists.
 -- When you make functions to work at entities, please use 
@@ -25,6 +25,21 @@ data AbstractEntity = forall a. (Class a) => AbstractEntity a
 
 instance Class AbstractEntity where
     updateEntity (AbstractEntity e) = updateEntity e
+
+monadicUpdate :: M e r -> e -> GameState -> Int -> DeltaState
+monadicUpdate m e s r = deltaState $ execState m (InternalState {
+        gameState = s,
+        deltaState = deltaStateNew,
+        randomSeed = r,
+        selfEntity = e
+    })
+
+data InternalState e = InternalState {
+    gameState :: GameState,
+    deltaState :: DeltaState,
+    randomSeed :: Int,
+    selfEntity :: e
+}
 
 data GameState = GameState {
     -- All the entities, including the players

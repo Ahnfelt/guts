@@ -15,9 +15,8 @@ $(features Nothing [])
 
 playerNew :: Position -> [String] -> (Unique -> AbstractEntity)
 playerNew p k =
-    \u -> AbstractEntity $ Data {
-    }
+    \u -> AbstractEntity $ Data {}
 
--- TODO: Convert this to M e ()
-update e s r = deltaStateNew
+update = do
+    return ()
 

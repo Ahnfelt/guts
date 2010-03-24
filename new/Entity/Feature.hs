@@ -19,7 +19,7 @@ features t ns = do
     let as = map (makeCall "after") ns
     let u = DoE (map NoBindS bs ++ [NoBindS (VarE (name "update"))] ++ map NoBindS as)
     let u' = InstanceD [] (AppT (ConT ''Entity.Class) (ConT (name "Data"))) [
-            FunD (name "updateEntity") [Clause [] (NormalB u) []]]
+            FunD (name "updateEntity") [Clause [] (NormalB (AppE (VarE 'Entity.monadicUpdate) u)) []]]
     return (u':d:is)
 
 makeField n = do
