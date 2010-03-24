@@ -90,16 +90,12 @@ main = do
     renderWith backgroundSurface (drawBackgroundTiles world painters)
 
     quitState <- newIORef False
-    dumpState <- newIORef False
     debugState <- newIORef False
     keyState <- newIORef newKeyState
 
     onKeyPress window $ \Key { eventKeyName = key } -> case key of
         "Escape" -> do
             writeIORef quitState True
-            return True
-        "F11" -> do
-            writeIORef dumpState True
             return True
         "F12" -> do
             s <- readIORef debugState
@@ -133,28 +129,23 @@ main = do
         stateBarriers = addBarrier (foldl (addBarrier) (newBarrierMap worldWidth worldHeight) (solidEdges world)) ((200, 0), (350, 400))}
     Image.imageWithAll $ \images -> do
         newTime <- getClockTime
-        mainLoop canvas backgroundSurface images quitState dumpState debugState keyState newTime s
+        mainLoop canvas backgroundSurface images quitState debugState keyState newTime s
 
 mainLoop :: (WidgetClass widget) => widget -> Surface -> (String -> Surface) ->
-    IORef Bool -> IORef Bool -> IORef Bool -> IORef KeyState -> 
+    IORef Bool -> IORef Bool -> IORef KeyState -> 
     ClockTime -> GameState -> IO ()
-mainLoop canvas surface images quitState dumpState debugState keyState t s = loop t s Map.empty where
+mainLoop canvas surface images quitState debugState keyState t s = loop t s Map.empty where
     loop t s m = do
         handleEvents
         keys <- readIORef keyState
-        dump <- readIORef dumpState
         debug <- readIORef debugState
         quit <- readIORef quitState
-        when dump $ do
-            putStrLn ("GameState at " ++ show t ++ ":")
-            print s
-            writeIORef dumpState False
         when (not quit) $ do
             let s' = s { stateKeys = \b -> keyPressed b keys }
             t' <- getClockTime
             let d = diffClockTime t t'
             r <- getStdRandom (first randoms . split)
-            let us = map (\(e, r') -> (e, updateEntity e s' (messages e m) r' d)) (zip (stateEntities s') r)
+            let us = map (\(e, r') -> (e, updateEntity e s' r' {- (messages e m) r' d-})) (zip (stateEntities s') r)
             let es' = concat $ map deltaEntities (map snd us)
             es'' <- forM es' $ \e -> do
                 i <- newUnique
@@ -164,12 +155,12 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
             let m'' = collisions es''
             let m''' = messageMap (m'' ++ m')
             renderWith surface (sequence_ [s | (_, d) <- us, Just s <- [deltaSplatter d]])
-            updateGraphics s'' canvas surface images debug
+            updateGraphics s'' canvas surface images [] debug
             --when debug $ putStrLn ("Entity count: " ++ show (length es''))
             loop t' s'' m'''
-    messages e ms = Map.findWithDefault [] (entityId e) ms
+    messages e ms = [] -- Map.findWithDefault [] (entityId e) ms
     messageMap ms = foldl (\ms' (i, m) -> Map.insert i (m:Map.findWithDefault [] i ms') ms') Map.empty ms
-    collisions es = [(entityId e2, (e1, MessageCollide)) | 
+    collisions es = [] {- [(entityId e2, (e1, MessageCollide)) | 
         e1 <- filter entityHitable es, e2 <- es,
         entityHitable e1 || entityHitable e2,
         entityId e1 /= entityId e2,
@@ -180,7 +171,7 @@ mainLoop canvas surface images quitState dumpState debugState keyState t s = loo
         let x = x2 - x1 in
         let y = y2 - y1 in
         let r = r1 + r2 in
-        x * x + y * y < r * r
+        x * x + y * y < r * r -}
 
 handleEvents :: IO ()
 handleEvents = do
@@ -197,7 +188,7 @@ diffClockTime (TOD s1 p1) (TOD s2 p2) =
         dp = fromIntegral (p2 - p1)
     in ds + (dp * 1e-12)
 
-updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> (String -> Surface) -> (Layer, Render) -> Bool -> IO Bool
+updateGraphics :: (WidgetClass a) => GameState -> a -> Surface -> (String -> Surface) -> [(Layer, Render ())] -> Bool -> IO Bool
 updateGraphics gameState canvas backgroundSurface images drawings debug = do
     let (x, y) = (0, 0)
     (w, h) <- widgetGetSize canvas
@@ -208,7 +199,7 @@ updateGraphics gameState canvas backgroundSurface images drawings debug = do
         translate (-x) (-y)
         setSourceSurface backgroundSurface 0 0
         paint
-        sequence_ (sortBy (comparing fst) drawings)
+        mapM_ snd (sortBy (comparing fst) drawings)
         when debug $ do
             mapM_ drawDebugBarrier (Set.toList $ Set.fromList (barriersOverlapping (stateBarriers gameState) (x, y) (x + fromIntegral w, y + fromIntegral h)))
         restore

@@ -10,7 +10,7 @@ import World.Barrier
 type M e r = State e r
 
 class Class e where
-    updateEntity :: e -> DeltaState
+    updateEntity :: e -> GameState -> Int -> DeltaState
 
 modify f = do
     e <- get

@@ -19,5 +19,5 @@ playerNew p k =
     }
 
 -- TODO: Convert this to M e ()
-update e = DeltaState {}
+update e s r = DeltaState {}
 
