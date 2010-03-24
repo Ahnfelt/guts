@@ -41,13 +41,11 @@ data GameState = GameState {
 data DeltaState = DeltaState { 
     -- The entities replacing the updated entity
     deltaEntities :: [Unique -> AbstractEntity],
-    -- The entity itself
-    deltaSelf :: AbstractEntity,
     -- Messages to send to the entities identified by the IDs
     deltaMessages :: [(Unique, Message)],
     -- A permanent drawing to add to the background image
     deltaSplatter :: Maybe (Render ())
 }
 
-deltaStateNew e = DeltaState { deltaEntities = [], deltaSelf = e, deltaMessages = [], deltaSplatter = Nothing }
+deltaStateNew = DeltaState { deltaEntities = [], deltaMessages = [], deltaSplatter = Nothing }
 

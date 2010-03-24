@@ -54,6 +54,10 @@ ascii = [
     "*                      `                                   *",
     "*            *                                             *",
     "*                                         `                *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
+    "*                                                          *",
     "*                        ** **                             *",
     "*                      ***   ***                           *",
     "*                     **       **                          *",
@@ -151,9 +155,9 @@ mainLoop canvas surface images quitState debugState keyState t s = loop t s Map.
                 i <- newUnique
                 return (e i)
             let s'' = s' { stateEntities = es'' }
-            let m' = concat $ map (\e -> [(e', (deltaSelf e, m)) | (e', m) <- deltaMessages e]) (map snd us)
-            let m'' = collisions es''
-            let m''' = messageMap (m'' ++ m')
+            let m' = [] --concat $ map (\e -> [(e', (deltaSelf e, m)) | (e', m) <- deltaMessages e]) (map snd us)
+            let m'' = [] --collisions es''
+            let m''' = Map.empty --messageMap (m'' ++ m')
             renderWith surface (sequence_ [s | (_, d) <- us, Just s <- [deltaSplatter d]])
             updateGraphics s'' canvas surface images [] debug
             --when debug $ putStrLn ("Entity count: " ++ show (length es''))
