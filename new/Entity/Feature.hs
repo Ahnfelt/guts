@@ -4,13 +4,16 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import qualified Entity
 
-name s = Name (mkOccName s) NameS
-
-features :: [Name] -> Q [Dec]
-features ns = do
-    let f = (name "extra", NotStrict, ConT (name "Extra"))
+-- Given an optional type for custom data and some feature names, 
+-- and assuming a function called 'update' is defined,
+-- this function generates the boilerplate for an entity.
+features :: Maybe Name -> [Name] -> Q [Dec]
+features t ns = do
     fs <- mapM makeField ns
-    let d = DataD [] (name "Data") [] [RecC (name "Data") (f:fs)] []
+    let fs' = case t of 
+            Just t' -> (name "extra", NotStrict, ConT t'):fs
+            Nothing -> fs
+    let d = DataD [] (name "Data") [] [RecC (name "Data") fs'] []
     is <- mapM makeInstance ns
     let bs = map (makeCall "before") ns
     let as = map (makeCall "after") ns
@@ -37,4 +40,6 @@ makeCall f n =
     let Just m = nameModule n in
     let f' = Name (mkOccName f) (NameQ (mkModName m)) in
     VarE f'
+
+name s = Name (mkOccName s) NameS
 

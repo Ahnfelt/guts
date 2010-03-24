@@ -6,7 +6,7 @@ import System.Random
 import System.Time
 import Control.Monad
 import Control.Arrow
-import Data.Array.Diff
+import Data.Array
 import Data.IORef
 import Data.Unique
 import Data.Maybe

@@ -1,10 +1,10 @@
 module World.Barrier where
-import Data.Array.Diff
+import Data.Array
 import Data.List
 import World.Mechanics
 import World.Tile
 
-newtype BarrierMap = BarrierMap (DiffArray (Int, Int) [LineSegment])
+newtype BarrierMap = BarrierMap (Array (Int, Int) [LineSegment])
 
 gridWidth = tileWidth
 gridHeight = tileHeight

@@ -11,11 +11,7 @@ import World.Tile
 import Entity
 import Entity.Feature
 
-
-data Extra = Extra { 
-}
-
-$(features [])
+$(features Nothing [])
 
 playerNew :: Position -> [String] -> (Unique -> AbstractEntity)
 playerNew p k =
@@ -24,5 +20,4 @@ playerNew p k =
 
 -- TODO: Convert this to M e ()
 update e = DeltaState {}
-    
 

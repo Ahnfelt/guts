@@ -7,7 +7,7 @@ module World.Tile (
     moveToward, solidEdges
     ) where
 import Graphics.Rendering.Cairo (Render)
-import Data.Array.Diff
+import Data.Array
 import Data.List
 import World.Mechanics
 
@@ -73,7 +73,7 @@ type TilePainter =
     Int -> -- random seed
     Render ()
 
-newtype TileMap = TileMap (DiffArray (Int, Int) Tile)
+newtype TileMap = TileMap (Array (Int, Int) Tile)
 
 tileGet :: TileMap -> Int -> Int -> Tile
 tileGet (TileMap a) x y = let ((x1, y1), (x2, y2)) = bounds a in
