@@ -71,18 +71,18 @@ instance Entity Flame where
     entityDraw e i = do
         when (actorAge e < 0.9) $ do
             save
-            let s = interpolate (actorAge e) 0.30 [(0.7, 1.00), (0.2, 0.10), (0.1, 0.01)]
+            let s = interpolate (actorAge e) 0.40 [(0.7, 1.00), (0.2, 0.30), (0.1, 0.01)]
             scale s s
             rotate (flameAngle e)
             setOperator OperatorAdd
             setSourceSurface (i "flame2.png") (-25) (-25)
             paint
             restore
-        let s' = interpolate (actorAge e) 0.50 [(0.8, 1.00), (0.2, 0.20)]
+        let s' = interpolate (actorAge e) 0.50 [(0.8, 1.50), (0.2, 0.20)]
         scale s' s'
         rotate (flameRotation e)
         setOperator OperatorAdd
-        setSourceSurface (i "flame3.png") (-25) (-25)
+        setSourceSurface (i "flame3.png") (-24) (-24)
         paint
 
     entityLayer e = LayerProjectile

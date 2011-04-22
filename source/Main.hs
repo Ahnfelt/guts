@@ -1,5 +1,5 @@
 module Main where
-import Graphics.UI.Gtk hiding (fill, Solid)
+import Graphics.UI.Gtk hiding (eventKeyName)
 import Graphics.UI.Gtk.Gdk.Events
 import Graphics.Rendering.Cairo
 import System.Random
